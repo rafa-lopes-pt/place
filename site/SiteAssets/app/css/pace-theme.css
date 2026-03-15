@@ -674,6 +674,380 @@
 }
 
 
+/* --- Side panel detail --- */
+
+.pace-detail-header {
+  margin-bottom: 20px;
+}
+
+.pace-detail-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.pace-detail-code {
+  font-family: monospace;
+  font-size: 0.82rem;
+}
+
+.pace-detail-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--pace-dark);
+  margin: 0;
+}
+
+.pace-detail-content {
+  padding: 0 4px;
+}
+
+.pace-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 16px;
+  margin-bottom: 16px;
+}
+
+.pace-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pace-detail-label {
+  font-size: 0.75rem;
+  color: var(--pace-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-weight: 600;
+}
+
+.pace-detail-value {
+  font-size: 0.88rem;
+  color: var(--pace-dark);
+}
+
+.pace-detail-text {
+  font-size: 0.88rem;
+  color: var(--pace-text);
+  line-height: 1.5;
+  margin: 0 0 16px 0;
+}
+
+.pace-detail-footer {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pace-flow-step-wrap {
+  display: flex;
+  align-items: center;
+  flex: 1;
+}
+
+
+/* --- Validation grid (two-column) --- */
+
+.pace-validation-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+
+/* --- Pending item actions --- */
+
+.pace-pending-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+}
+
+.pace-pending-code {
+  margin-right: 8px;
+}
+
+
+/* --- Revision item --- */
+
+.pace-revision-item {
+  border-left: 3px solid var(--pace-red);
+}
+
+
+/* --- Empty message --- */
+
+.pace-empty-msg {
+  font-size: 0.88rem;
+  color: var(--pace-text-muted);
+  font-style: italic;
+  margin: 8px 0;
+}
+
+
+/* --- Filter count --- */
+
+.pace-filter-count {
+  font-size: 0.82rem;
+  color: var(--pace-text-sec);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+
+/* --- CTA left group --- */
+
+.pace-cta-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pace-cta h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+
+/* --- Profile grid (instrucoes) --- */
+
+.pace-profile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.pace-profile--green { border-color: #9ac433; }
+.pace-profile--dark-green { border-color: #5a8a4a; }
+.pace-profile--darker-green { border-color: #3d6b52; }
+
+.pace-profile-resp-list {
+  text-align: left;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--pace-border);
+}
+
+.pace-profile-resp {
+  font-size: 0.82rem;
+  color: var(--pace-text-sec);
+  margin: 0 0 4px 0;
+  padding-left: 10px;
+  position: relative;
+}
+
+.pace-profile-resp::before {
+  content: '-';
+  position: absolute;
+  left: 0;
+  color: var(--pace-text-muted);
+}
+
+
+/* --- Guide cards (instrucoes) --- */
+
+.pace-guide--green { border-left: 3px solid #9ac433; }
+.pace-guide--dark-green { border-left: 3px solid #5a8a4a; }
+.pace-guide--darker-green { border-left: 3px solid #3d6b52; }
+.pace-guide--gray { border-left: 3px solid #9ca3af; }
+.pace-guide--red { border-left: 3px solid var(--pace-red); }
+
+.pace-guide-who {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--pace-text-muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.pace-guide-body {
+  padding: 4px 0;
+}
+
+.pace-steps-list {
+  margin-bottom: 10px;
+}
+
+.pace-step-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.pace-step-num {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--pace-green-light);
+  color: var(--pace-green-hover);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.pace-step-text {
+  font-size: 0.85rem;
+  color: var(--pace-text);
+  line-height: 1.4;
+}
+
+.pace-guide-tip-box {
+  background: var(--pace-green-light);
+  border: 1px solid var(--pace-green);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-top: 6px;
+}
+
+.pace-guide-tip {
+  font-size: 0.82rem;
+  color: var(--pace-green-hover);
+  margin: 0;
+  font-style: italic;
+}
+
+
+/* --- Initiative modal form --- */
+
+.pace-initiative-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 0;
+}
+
+.pace-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--pace-border);
+}
+
+.pace-modal-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--pace-dark);
+  margin: 0 0 4px 0;
+}
+
+.pace-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--pace-text);
+}
+
+
+/* --- Container-based table rows (non-HTML-table) --- */
+
+.pace-table-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 120px 120px 100px 100px 90px auto;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--pace-border);
+  font-size: 0.85rem;
+  color: var(--pace-text);
+}
+
+.pace-table-row:hover:not(.pace-table-row--header):not(.pace-totals-row) {
+  background: var(--pace-green-light);
+}
+
+.pace-table-row--header {
+  border-bottom: 2px solid var(--pace-border);
+  background: none;
+}
+
+.pace-table-th {
+  font-weight: 600;
+  color: var(--pace-text-sec);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.pace-table-link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--pace-green-hover);
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.85rem;
+}
+
+.pace-table-link-btn:hover {
+  text-decoration: underline;
+}
+
+
+/* --- Empty state text --- */
+
+.pace-empty {
+  font-size: 0.88rem;
+  color: var(--pace-text-muted);
+  padding: 16px 0;
+}
+
+
+/* --- Chip group (inline chips) --- */
+
+.pace-chip-group {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+
+/* --- Collaboration stub --- */
+
+.pace-collab-stub {
+  padding: 12px 0;
+}
+
+.pace-collab-section {
+  margin-bottom: 16px;
+}
+
+
+/* --- Toggle wrapper --- */
+
+.pace-toggle-wrapper {
+  margin-bottom: 20px;
+}
+
+
+/* --- Open table container --- */
+
+.pace-open-table-container {
+  margin-bottom: 24px;
+}
+
+
+/* --- Table row cursor --- */
+
+.pace-table-wrap tr[data-row-idx] {
+  cursor: pointer;
+}
+
+
 /* --- Responsive adjustments --- */
 
 @media (max-width: 768px) {
@@ -687,6 +1061,18 @@
 
   #root {
     padding: 16px;
+  }
+
+  .pace-validation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pace-profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pace-detail-grid {
+    grid-template-columns: 1fr;
   }
 }
 

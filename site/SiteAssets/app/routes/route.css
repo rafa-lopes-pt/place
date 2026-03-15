@@ -1,0 +1,95 @@
+/* Inicio route-specific styles */
+
+.pace-hero-badge {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 3px 12px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  letter-spacing: 0.3px;
+}
+
+.pace-hero__actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.pace-hero-link-btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+}
+
+.pace-hero-link-btn:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* PDCA wheel CSS-only visual */
+.pace-pdca-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.pace-pdca-wheel {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 4px;
+}
+
+.pace-pdca-seg {
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: #ffffff;
+}
+
+.pace-pdca-seg--plan { background: #9ac433; border-radius: 50% 6px 6px 6px; }
+.pace-pdca-seg--do { background: #7da829; border-radius: 6px 50% 6px 6px; }
+.pace-pdca-seg--check { background: #5a8a4a; border-radius: 6px 6px 6px 50%; }
+.pace-pdca-seg--act { background: #3d6b52; border-radius: 6px 6px 50% 6px; }
+
+.pace-pdca-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--pace-dark);
+  letter-spacing: 1px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+/* Home two-column grid */
+.pace-home-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .pace-home-grid {
+    grid-template-columns: 1fr;
+  }
+}
