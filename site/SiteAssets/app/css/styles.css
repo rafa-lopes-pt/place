@@ -1,0 +1,18 @@
+/* Global Application Styles */
+
+:root {
+  --primary: #0070d2;
+  --primary-dark: #003d82;
+  --text: #333;
+  --text-muted: #666;
+  --border: #e0e0e0;
+  --bg-light: #f9f9f9;
+  --radius: 6px;
+  --spacing: 0.5rem;
+}
+
+#root {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
