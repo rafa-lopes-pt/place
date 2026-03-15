@@ -982,6 +982,61 @@ class Modal extends Container {
     }
 }
 
+class SidePanel extends Modal {
+    constructor(props) {
+        const defaults = {
+            ...props
+        };
+        defaults.backdrop = props?.backdrop ?? true;
+        defaults.closeOnFocusLoss = props?.closeOnFocusLoss ?? true;
+        super([], defaults);
+        this._title = props?.title || "";
+        this._width = props?.width || "400px";
+        const children = [ new Card(props.content, {
+            class: `${this.topClassBEM}__content`
+        }) ];
+        if (props?.footer) {
+            children.push(new Card(props.footer, {
+                class: `${this.topClassBEM}__footer`
+            }));
+        }
+        this.children = children;
+    }
+    get _modifierClasses() {
+        const mods = [];
+        if (this._isOpen) mods.push(`${this.topClassBEM}--open`);
+        return mods.join(" ");
+    }
+    render() {
+        this._containerSelector = "#root";
+        super.render();
+    }
+    toString() {
+        return `\n      <div\n        id="${this.id}"\n        class="${this.class} ${this._modifierClasses}"\n        style="width: ${this._width}"\n        tabindex="-1"\n      >\n        <div class="${this.topClassBEM}__header-bar">\n          <h2 class="${this.topClassBEM}__title">${escapeHtml(this._title)}</h2>\n          <button class="${this.topClassBEM}__close-btn" type="button" aria-label="Close">\n            ${getIcon("close-line")}\n          </button>\n        </div>\n      </div>\n    `;
+    }
+    _applyEventListeners() {
+        super._applyEventListeners();
+        this.instance?.on("keydown", e => {
+            if (e.key === "Escape") this.close();
+        });
+        this.instance?.find(`.${this.topClassBEM}__close-btn`).on("click", () => this.close());
+    }
+    get title() {
+        return this._title;
+    }
+    set title(value) {
+        this._title = value;
+        this.instance?.find(`.${this.topClassBEM}__title`).text(value);
+    }
+    get width() {
+        return this._width;
+    }
+    set width(value) {
+        this._width = value;
+        this.instance?.css("width", value);
+    }
+}
+
 class View extends HTMDElement {
     constructor(children, props) {
         super(children, props);
@@ -3879,6 +3934,42 @@ async function defineRoute(closureCallback) {
     return route;
 }
 
+var _RoleManager_roles, _RoleManager_loaded;
+
+class RoleManager {
+    constructor() {
+        _RoleManager_roles.set(this, []);
+        _RoleManager_loaded.set(this, false);
+    }
+    async load(listName = "UserRoles") {
+        const email = (new CurrentUser).get("email");
+        const api = new ListApi(listName);
+        const [item] = await api.getItemByTitle(email);
+        __classPrivateFieldSet(this, _RoleManager_roles, Array.isArray(item?.Roles) ? item.Roles : [], "f");
+        __classPrivateFieldSet(this, _RoleManager_loaded, true, "f");
+    }
+    hasRole(role) {
+        return __classPrivateFieldGet(this, _RoleManager_roles, "f").includes(role);
+    }
+    hasAnyRole(requiredRoles) {
+        if (requiredRoles.includes("*")) return true;
+        return requiredRoles.some(r => __classPrivateFieldGet(this, _RoleManager_roles, "f").includes(r));
+    }
+    canAccess(key, permissionMap) {
+        const required = permissionMap[key];
+        if (!required) return false;
+        return this.hasAnyRole(required);
+    }
+    get roles() {
+        return [ ...__classPrivateFieldGet(this, _RoleManager_roles, "f") ];
+    }
+    get isLoaded() {
+        return __classPrivateFieldGet(this, _RoleManager_loaded, "f");
+    }
+}
+
+_RoleManager_roles = new WeakMap, _RoleManager_loaded = new WeakMap;
+
 var _a, _ContextStore_store, _ContextStore_tryDispose;
 
 class ContextStore {
@@ -4138,5 +4229,5 @@ class FieldLabel extends HTMDElement {
     }
 }
 
-export { AccordionGroup, AccordionItem, Button, Card, CheckBox, ComboBox, Container, ContextStore, CurrentUser, DateInput, Dialog, ErrorBoundary, FieldLabel, FormControl, FormField, FormSchema, Fragment, HTMDElement, Image, LinkButton, List, Loader, Modal, NavigationEvent, NumberInput, PeoplePicker, Router, SP_ACCEPT_MINIMAL, SimpleElapsedTimeBenchmark, SiteApi, StyleResource, SystemError, TabGroup, Text, TextArea, TextInput, Toast, UserIdentity, View, ViewSwitcher, dayjs as __dayjs, Fuse as __fuse, copyToClipboard, defineRoute, enforceStrictObject, escapeAttr, escapeHtml, fromFieldValue, generateRuntimeUID, generateUUIDv4, getFullUserDetails, getIcon, getUserProfile, pageReset, refreshRequestDigest, resolvePath, searchUsers, spDELETE, spGET, spMERGE, spPOST, startDigestTimer, stopDigestTimer, toFieldValue };
+export { AccordionGroup, AccordionItem, Button, Card, CheckBox, ComboBox, Container, ContextStore, CurrentUser, DateInput, Dialog, ErrorBoundary, FieldLabel, FormControl, FormField, FormSchema, Fragment, HTMDElement, Image, LinkButton, List, Loader, Modal, NavigationEvent, NumberInput, PeoplePicker, RoleManager, Router, SP_ACCEPT_MINIMAL, SidePanel, SimpleElapsedTimeBenchmark, SiteApi, StyleResource, SystemError, TabGroup, Text, TextArea, TextInput, Toast, UserIdentity, View, ViewSwitcher, dayjs as __dayjs, Fuse as __fuse, copyToClipboard, defineRoute, enforceStrictObject, escapeAttr, escapeHtml, fromFieldValue, generateRuntimeUID, generateUUIDv4, getFullUserDetails, getIcon, getUserProfile, pageReset, refreshRequestDigest, resolvePath, searchUsers, spDELETE, spGET, spMERGE, spPOST, startDigestTimer, stopDigestTimer, toFieldValue };
 //# sourceMappingURL=nofbiz.base.js.map

@@ -1,18 +1,25 @@
-/* Global Application Styles */
+/* PACE Global Application Styles */
 
 :root {
-  --primary: #0070d2;
-  --primary-dark: #003d82;
-  --text: #333;
-  --text-muted: #666;
-  --border: #e0e0e0;
-  --bg-light: #f9f9f9;
+  --pace-green: #9ac433;
+  --pace-green-hover: #7da829;
+  --pace-green-light: rgba(154, 196, 51, 0.08);
+  --pace-dark: #2d3436;
+  --pace-bg: #f9fafb;
+  --pace-surface: #ffffff;
+  --pace-border: #e5e7eb;
+  --pace-text: #2d3436;
+  --pace-text-sec: #6b7280;
+  --pace-text-muted: #9ca3af;
+  --pace-red: #ef4444;
+  --pace-red-light: #fef2f2;
+  --pace-amber: #e8960c;
+  --pace-amber-light: #fef3c7;
   --radius: 6px;
-  --spacing: 0.5rem;
 }
 
 #root {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 32px;
 }

@@ -481,6 +481,27 @@ declare class Modal extends Container {
     get isVisible(): boolean | undefined;
 }
 
+interface SidePanelProps extends ModalProps {
+    title: string;
+    content: HTMDNode;
+    footer?: HTMDNode;
+    /** Panel width. Accepts any valid CSS width value. @default '400px' */
+    width?: string;
+}
+declare class SidePanel extends Modal {
+    protected _title: string;
+    protected _width: string;
+    constructor(props: SidePanelProps);
+    protected get _modifierClasses(): string;
+    render(): void;
+    toString(): string;
+    protected _applyEventListeners(): void;
+    get title(): string;
+    set title(value: string);
+    get width(): string;
+    set width(value: string);
+}
+
 interface ViewProps extends HTMDElementProps {
     onRefreshHandler?: () => void;
     showOnRender?: boolean;
@@ -2428,6 +2449,124 @@ declare function startDigestTimer(): void;
  */
 declare function stopDigestTimer(): void;
 
+/**
+ * @module RoleManager
+ *
+ * Provides the {@link RoleManager} class for list-based authorization.
+ *
+ * RoleManager loads a user's roles from a SharePoint list and provides
+ * methods to check role membership and permission map access. Unlike
+ * {@link CurrentUser}, RoleManager is NOT a singleton -- different apps
+ * may use different list names or maintain multiple instances.
+ *
+ * **List structure:** The list stores one item per user, where:
+ * - `Title` field contains the user's email address (used as lookup key)
+ * - `Roles` field contains a JSON-serialized `string[]` (auto-parsed by ListApi)
+ *
+ * @example
+ * ```ts
+ * const roles = new RoleManager();
+ * await roles.load('AppRoles');
+ *
+ * roles.hasRole('editor');                         // true/false
+ * roles.hasAnyRole(['admin', 'editor']);            // true if user has either
+ * roles.canAccess('reports', permissionMap);        // true if user's roles overlap
+ * ```
+ *
+ * @see {@link CurrentUser} for the authenticated user singleton (must be initialized first).
+ * @see {@link ListApi} for the underlying list query.
+ */
+/**
+ * Maps resource keys to arrays of role names that grant access.
+ *
+ * Use `'*'` in the role array to grant access to all users regardless of roles.
+ *
+ * @example
+ * ```ts
+ * const permissions: PermissionMap = {
+ *   dashboard: ['*'],                    // everyone
+ *   reports:   ['admin', 'analyst'],     // admin or analyst
+ *   settings:  ['admin'],                // admin only
+ * };
+ * ```
+ */
+interface PermissionMap {
+    [key: string]: string[];
+}
+/**
+ * List-based authorization class that loads user roles from a SharePoint list
+ * and provides role-checking and permission-map utilities.
+ *
+ * Not a singleton -- instantiate per list or per context as needed.
+ *
+ * @example
+ * ```ts
+ * // Basic usage
+ * const roles = new RoleManager();
+ * await roles.load();                  // defaults to 'UserRoles' list
+ *
+ * if (roles.hasRole('admin')) { ... }
+ *
+ * // Permission map usage
+ * const map: PermissionMap = {
+ *   editProject: ['admin', 'manager'],
+ *   viewProject: ['*'],
+ * };
+ * if (roles.canAccess('editProject', map)) { ... }
+ * ```
+ */
+declare class RoleManager {
+    #private;
+    /**
+     * Loads the current user's roles from the specified SharePoint list.
+     *
+     * Queries the list by `Title` (which should contain the user's email).
+     * The `Roles` field is expected to be a JSON-serialized `string[]`,
+     * which ListApi auto-parses back to a native array.
+     *
+     * If no matching item is found, the instance has zero roles -- this is
+     * a valid state (no error thrown).
+     *
+     * @param listName - SharePoint list name to query. Defaults to `'UserRoles'`.
+     */
+    load(listName?: string): Promise<void>;
+    /**
+     * Returns `true` if the user has the exact specified role.
+     *
+     * @param role - Role name to check.
+     */
+    hasRole(role: string): boolean;
+    /**
+     * Returns `true` if the user has at least one of the specified roles.
+     *
+     * If `requiredRoles` contains `'*'`, returns `true` unconditionally
+     * (wildcard grants access to all users).
+     *
+     * @param requiredRoles - Array of role names. Include `'*'` for wildcard.
+     */
+    hasAnyRole(requiredRoles: string[]): boolean;
+    /**
+     * Checks whether the user can access a resource defined in a {@link PermissionMap}.
+     *
+     * Looks up the key in the map and delegates to {@link hasAnyRole}.
+     * Returns `false` if the key is not present in the map.
+     *
+     * @param key - Resource key to look up in the permission map.
+     * @param permissionMap - Map of resource keys to required role arrays.
+     */
+    canAccess(key: string, permissionMap: PermissionMap): boolean;
+    /**
+     * Returns a shallow copy of the loaded roles array.
+     * Returns an empty array if {@link load} has not been called.
+     */
+    get roles(): string[];
+    /**
+     * Whether {@link load} has completed successfully.
+     * Lets apps distinguish "not yet loaded" from "loaded with zero roles".
+     */
+    get isLoaded(): boolean;
+}
+
 interface ContextStoreEntry {
     value: unknown;
     createdAt: number;
@@ -2687,5 +2826,5 @@ declare global {
     }
 }
 
-export { AccordionGroup, AccordionItem, Button, Card, CheckBox, ComboBox, Container, ContextStore, CurrentUser, DateInput, Dialog, ErrorBoundary, FieldLabel, FormControl, FormField, FormSchema, Fragment, HTMDElement, Image, LinkButton, List, Loader, Modal, NavigationEvent, NumberInput, PeoplePicker, Router, SP_ACCEPT_MINIMAL, SimpleElapsedTimeBenchmark, SiteApi, StyleResource, SystemError, TabGroup, Text, TextArea, TextInput, Toast, UserIdentity, View, ViewSwitcher, copyToClipboard, defineRoute, enforceStrictObject, escapeAttr, escapeHtml, fromFieldValue, generateRuntimeUID, generateUUIDv4, getFullUserDetails, getIcon, getUserProfile, pageReset, refreshRequestDigest, resolvePath, searchUsers, spDELETE, spGET, spMERGE, spPOST, startDigestTimer, stopDigestTimer, toFieldValue };
-export type { AccordionGroupProps, AccordionItemProps, ButtonProps, CAMLCondition, CAMLOperator, CAMLQueryObject, CAMLQueryResponse, CAMLValueOperator, CardProps, CardVariants, ChildrenOptions, ComboBoxDataset, ComboBoxOptionProps, ComboBoxProps, ContainerProps, ContainerTags, ContextStoreEntry, CreateFieldOptions, CreateListOptions, DATE_FORMATS, DateInputProps, DialogProps, DialogVariants, ErrorBoundaryProps, ErrorOptions, FieldLabelPosition, FieldLabelProps, FormControlProps, FormFieldProps, FormFieldType, FragmentProps, FullUserDetails, GetItemsOptions, GroupHierarchyEntry, HTMDElementInterface, HTMDElementProps, HTMDNode, HTMDSingleNode, ImageProps, InitializeOptions, LinkButtonProps, ListApiOptions, ListProps, LoaderProps, ModalProps, NavigationGuardFn, NavigationOptions, NumberInputProps, PeoplePickerProps, PeopleSearchOptions, PeopleSearchResult, PeopleSearchResultData, ProfileProperty, RouteConfig, RouteOptions, RoutePaths, RouterProps, RuntimeEventListenerOptions, RuntimeEventOptions, SPCollectionResponse, SPField, SPFieldValue, SPGroup, SPItemWithETag, SPList, SPRequestOptions, SPSimpleValue, SPUser, SPWeb, StyleResourceOptions, TabConfig, TabGroupProps, TextAreaProps, TextInputProps, TextProps, ToastLoadingController, ToastOptions, ToastPromiseMessages, ToastType, Unsubscribe, UserProfile, UserProfilePayload, ViewProps, ViewSwitcherProps, pageResetOptions };
+export { AccordionGroup, AccordionItem, Button, Card, CheckBox, ComboBox, Container, ContextStore, CurrentUser, DateInput, Dialog, ErrorBoundary, FieldLabel, FormControl, FormField, FormSchema, Fragment, HTMDElement, Image, LinkButton, List, Loader, Modal, NavigationEvent, NumberInput, PeoplePicker, RoleManager, Router, SP_ACCEPT_MINIMAL, SidePanel, SimpleElapsedTimeBenchmark, SiteApi, StyleResource, SystemError, TabGroup, Text, TextArea, TextInput, Toast, UserIdentity, View, ViewSwitcher, copyToClipboard, defineRoute, enforceStrictObject, escapeAttr, escapeHtml, fromFieldValue, generateRuntimeUID, generateUUIDv4, getFullUserDetails, getIcon, getUserProfile, pageReset, refreshRequestDigest, resolvePath, searchUsers, spDELETE, spGET, spMERGE, spPOST, startDigestTimer, stopDigestTimer, toFieldValue };
+export type { AccordionGroupProps, AccordionItemProps, ButtonProps, CAMLCondition, CAMLOperator, CAMLQueryObject, CAMLQueryResponse, CAMLValueOperator, CardProps, CardVariants, ChildrenOptions, ComboBoxDataset, ComboBoxOptionProps, ComboBoxProps, ContainerProps, ContainerTags, ContextStoreEntry, CreateFieldOptions, CreateListOptions, DATE_FORMATS, DateInputProps, DialogProps, DialogVariants, ErrorBoundaryProps, ErrorOptions, FieldLabelPosition, FieldLabelProps, FormControlProps, FormFieldProps, FormFieldType, FragmentProps, FullUserDetails, GetItemsOptions, GroupHierarchyEntry, HTMDElementInterface, HTMDElementProps, HTMDNode, HTMDSingleNode, ImageProps, InitializeOptions, LinkButtonProps, ListApiOptions, ListProps, LoaderProps, ModalProps, NavigationGuardFn, NavigationOptions, NumberInputProps, PeoplePickerProps, PeopleSearchOptions, PeopleSearchResult, PeopleSearchResultData, PermissionMap, ProfileProperty, RouteConfig, RouteOptions, RoutePaths, RouterProps, RuntimeEventListenerOptions, RuntimeEventOptions, SPCollectionResponse, SPField, SPFieldValue, SPGroup, SPItemWithETag, SPList, SPRequestOptions, SPSimpleValue, SPUser, SPWeb, SidePanelProps, StyleResourceOptions, TabConfig, TabGroupProps, TextAreaProps, TextInputProps, TextProps, ToastLoadingController, ToastOptions, ToastPromiseMessages, ToastType, Unsubscribe, UserProfile, UserProfilePayload, ViewProps, ViewSwitcherProps, pageResetOptions };
