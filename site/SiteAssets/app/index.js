@@ -4,9 +4,11 @@ import {
   CurrentUser,
   RoleManager,
   ContextStore,
+  SiteApi,
   resolvePath,
   StyleResource,
 } from './libs/nofbiz/nofbiz.base.js';
+import { renderNavbar } from './utils/navbar.js';
 
 await pageReset({
   themePath: resolvePath('@/libs/nofbiz/nofbiz.base.css'),
@@ -22,6 +24,8 @@ const user = await new CurrentUser().initialize();
 const roleManager = new RoleManager();
 await roleManager.load('UserRoles');
 
+const siteApi = new SiteApi();
+ContextStore.set('siteApi', siteApi);
 ContextStore.set('roleManager', roleManager);
 ContextStore.set('currentUser', user);
 
@@ -39,5 +43,7 @@ routes.push('catalogo', 'dashboard');
 if (roleManager.hasRole('mentor')) {
   routes.push('admin');
 }
+
+renderNavbar(routes, user, roleManager);
 
 new Router(routes);
