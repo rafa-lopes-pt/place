@@ -1,83 +1,50 @@
 /* Inicio route-specific styles */
 
 .pace-hero-badge {
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  padding: 3px 12px;
-  border-radius: 12px;
-  font-size: 0.78rem;
-  font-weight: 600;
-  margin-bottom: 10px;
-  letter-spacing: 0.3px;
+  display: block;
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--pace-green-hover);
+  margin-bottom: 12px;
 }
 
 .pace-hero__actions {
   display: flex;
   gap: 12px;
-  margin-top: 18px;
   flex-wrap: wrap;
 }
 
 .pace-hero-link-btn {
-  background: rgba(255, 255, 255, 0.15) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  color: #ffffff !important;
+  background: transparent !important;
+  border: 2px solid var(--pace-green) !important;
+  color: var(--pace-green-hover) !important;
+  padding: 10px 20px; font-size: 14px; font-weight: 600;
 }
-
 .pace-hero-link-btn:hover {
-  background: rgba(255, 255, 255, 0.25) !important;
+  background: var(--pace-green) !important;
+  color: #fff !important;
 }
 
 /* PDCA wheel CSS-only visual */
-.pace-pdca-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 28px;
-}
-
 .pace-pdca-wheel {
-  position: relative;
-  width: 140px;
-  height: 140px;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 4px;
+  width: 180px; height: 180px; position: relative; flex-shrink: 0;
 }
-
 .pace-pdca-seg {
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 1.3rem;
-  color: #ffffff;
+  position: absolute; width: 78px; height: 78px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 800; color: white;
+  border-radius: 10px; transition: transform 0.3s ease;
 }
-
-.pace-pdca-seg--plan { background: #9ac433; border-radius: 50% 6px 6px 6px; }
-.pace-pdca-seg--do { background: #7da829; border-radius: 6px 50% 6px 6px; }
-.pace-pdca-seg--check { background: #5a8a4a; border-radius: 6px 6px 6px 50%; }
-.pace-pdca-seg--act { background: #3d6b52; border-radius: 6px 6px 50% 6px; }
-
+.pace-pdca-seg:hover { transform: scale(1.08); }
+.pace-pdca-seg--plan  { top: 0; left: 0; background: #9ac433; }
+.pace-pdca-seg--do    { top: 0; right: 0; background: #85b329; }
+.pace-pdca-seg--check { bottom: 0; right: 0; background: #6d9420; }
+.pace-pdca-seg--act   { bottom: 0; left: 0; background: #8bbd2a; }
 .pace-pdca-center {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--pace-dark);
-  letter-spacing: 1px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 56px; height: 56px; background: white; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: var(--pace-green-hover);
+  letter-spacing: 1px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 /* Home two-column grid */
@@ -89,7 +56,9 @@
 }
 
 @media (max-width: 768px) {
-  .pace-home-grid {
-    grid-template-columns: 1fr;
-  }
+  .pace-home-grid { grid-template-columns: 1fr; }
+  .pace-hero { flex-direction: column; padding: 32px 24px; }
+  .pace-pdca-wheel { width: 140px; height: 140px; }
+  .pace-pdca-seg { width: 60px; height: 60px; font-size: 18px; }
+  .pace-pdca-center { width: 44px; height: 44px; font-size: 9px; }
 }

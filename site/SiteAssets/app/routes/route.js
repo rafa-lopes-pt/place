@@ -22,12 +22,12 @@ export default defineRoute(async (config) => {
 
   // -- Helpers (scoped inside defineRoute) --
 
-  const buildKpiCard = (value, label, highlight) => {
-    const cardClass = highlight ? 'pace-kpi pace-kpi--highlight' : 'pace-kpi';
+  const buildHomeKpi = (value, label, greenValue = false) => {
+    const valClass = greenValue ? 'pace-kpi-value pace-kpi-value--green' : 'pace-kpi-value';
     return new Container([
-      new Text(value, { type: 'span', class: 'pace-kpi-value' }),
       new Text(label, { type: 'span', class: 'pace-kpi-label' }),
-    ], { class: cardClass });
+      new Text(value, { type: 'span', class: valClass }),
+    ], { class: 'pace-kpi' });
   };
 
   const getUniqueMentors = () => {
@@ -62,7 +62,16 @@ export default defineRoute(async (config) => {
     return sum;
   }, 0);
 
-  const savingsDisplay = savingsTotal > 0 ? `${savingsTotal.toLocaleString('pt-PT')} EUR` : '-';
+  const savingsDisplay = savingsTotal > 0 ? `${savingsTotal.toLocaleString('pt-PT')} EUR` : '\u2014';
+
+  // -- PDCA wheel visual (inside hero) --
+  const pdcaWheel = new Container([
+    new Container([new Text('P', { type: 'span' })], { class: 'pace-pdca-seg pace-pdca-seg--plan' }),
+    new Container([new Text('D', { type: 'span' })], { class: 'pace-pdca-seg pace-pdca-seg--do' }),
+    new Container([new Text('C', { type: 'span' })], { class: 'pace-pdca-seg pace-pdca-seg--check' }),
+    new Container([new Text('A', { type: 'span' })], { class: 'pace-pdca-seg pace-pdca-seg--act' }),
+    new Container([new Text('PDCA', { type: 'span' })], { class: 'pace-pdca-center' }),
+  ], { class: 'pace-pdca-wheel' });
 
   // -- Hero welcome banner --
   const newInitiativeBtn = new Button('+ Nova Iniciativa', {
@@ -76,57 +85,45 @@ export default defineRoute(async (config) => {
 
   const hero = new Container([
     new Container([
-      new Text('Place - Cetelem Portugal', { type: 'span', class: 'pace-hero-badge' }),
+      new Text('PLACE - CETELEM PORTUGAL', { type: 'span', class: 'pace-hero-badge' }),
       new Text(`Ola, ${firstName}`, { type: 'h1' }),
-      new Text('Bem-vindo ao Place, a plataforma de melhoria continua da Cetelem Portugal. Submete as tuas iniciativas PDCA e acompanha o seu progresso.', { type: 'p' }),
+      new Text('Bem-vindo a plataforma de melhoria continua. Submeta ideias, acompanhe o progresso e quantifique o impacto das suas iniciativas PDCA.', { type: 'p' }),
       new Container([
         newInitiativeBtn,
-        new LinkButton('Ver as minhas iniciativas', 'pessoal', { variant: 'secondary', class: 'pace-hero-link-btn' }),
+        new LinkButton('Ver as minhas iniciativas ->', 'pessoal', { variant: 'secondary', class: 'pace-hero-link-btn' }),
       ], { class: 'pace-hero__actions' }),
     ], { class: 'pace-hero__content' }),
-    new Container([], { class: 'pace-hero-wheel' }),
+    new Container([pdcaWheel], { class: 'pace-hero__visual' }),
   ], { class: 'pace-hero' });
 
-  // -- PDCA wheel visual --
-  const pdcaWheel = new Container([
-    new Container([
-      new Container([new Text('P', { type: 'span' })], { class: 'pace-pdca-seg pace-pdca-seg--plan' }),
-      new Container([new Text('D', { type: 'span' })], { class: 'pace-pdca-seg pace-pdca-seg--do' }),
-      new Container([new Text('C', { type: 'span' })], { class: 'pace-pdca-seg pace-pdca-seg--check' }),
-      new Container([new Text('A', { type: 'span' })], { class: 'pace-pdca-seg pace-pdca-seg--act' }),
-      new Container([new Text('PDCA', { type: 'span' })], { class: 'pace-pdca-center' }),
-    ], { class: 'pace-pdca-wheel' }),
-  ], { class: 'pace-pdca-wrap' });
-
-  // -- KPI cards --
+  // -- KPI cards (label-first layout) --
   const kpiRow = new Container([
-    buildKpiCard(String(totalOwned), 'As Minhas Iniciativas', false),
-    buildKpiCard(String(pendingCount), 'Pendentes', pendingCount > 0),
-    buildKpiCard(savingsDisplay, 'Savings Declarados', savingsTotal > 0),
+    buildHomeKpi(String(totalOwned), 'As Minhas Iniciativas'),
+    buildHomeKpi(String(pendingCount), 'Pendentes'),
+    buildHomeKpi(savingsDisplay, 'Savings Declarados', savingsTotal > 0),
   ], { class: 'pace-kpi-row' });
 
-  // -- Notifications list (sample data) --
+  // -- Notifications list (relative time, matching mockup) --
   const notifications = [
-    { text: 'A sua iniciativa PDCA-012 foi aprovada pelo mentor.', date: '14/03/2026', type: '' },
-    { text: 'Novo comentario na iniciativa PDCA-008.', date: '13/03/2026', type: '' },
-    { text: 'A iniciativa PDCA-005 esta pendente ha mais de 7 dias.', date: '12/03/2026', type: 'warn' },
-    { text: 'Savings da PDCA-003 foram validados pelo gestor.', date: '10/03/2026', type: '' },
-    { text: 'A sua iniciativa PDCA-015 requer revisao.', date: '09/03/2026', type: 'error' },
+    { text: 'PDCA-042 submetido para validacao de projecto.', time: 'ha 4 dias' },
+    { text: 'PDCA-034 transitou para Em Execucao.', time: 'ha 2 semanas' },
+    { text: 'Diogo Legatheaux comentou PDCA-043.', time: 'ha 9 dias' },
+    { text: 'PDCA-031 -- savings submetidos por Hugo Pires.', time: 'ha 3 semanas' },
+    { text: 'PDCA-047 recebido para validacao por Gil Gaspar.', time: 'ha 7 dias' },
   ];
 
   const notifItems = notifications.map((n) => {
-    const iconClass = n.type ? `pace-notif-icon pace-notif-icon--${n.type}` : 'pace-notif-icon';
     return new Container([
-      new Container([], { class: iconClass }),
+      new Container([], { class: 'pace-notif-icon' }),
       new Container([
         new Text(n.text, { type: 'span' }),
-        new Text(n.date, { type: 'span', class: 'pace-notif-date' }),
+        new Text(n.time, { type: 'span', class: 'pace-notif-date' }),
       ]),
     ], { class: 'pace-notif-item' });
   });
 
   const notificationsSection = new Container([
-    new Text('Notificacoes', { type: 'h3', class: 'pace-sec-title' }),
+    new Text('Notificacoes', { type: 'h3', class: 'pace-sec-title pace-sec-title--plain' }),
     new Container(notifItems, { as: 'div', class: 'pace-notif-list' }),
   ], { class: 'pace-home-notifications' });
 
@@ -140,16 +137,16 @@ export default defineRoute(async (config) => {
       .join(', ');
 
     return new Container([
-      new Container([new Text(initials, { type: 'span' })], { class: 'pace-mentor-avatar' }),
+      new Container([new Text(initials, { type: 'span' })], { class: 'pace-mentor-avatar pace-mentor-avatar--filled' }),
       new Container([
         new Text(m.displayName, { type: 'span', class: 'pace-mentor-name' }),
-        new Text(teams, { type: 'span', class: 'pace-mentor-team' }),
+        new Text(`Mentor - ${teams}`, { type: 'span', class: 'pace-mentor-role' }),
       ]),
-    ], { class: 'pace-mentor-row' });
+    ], { class: 'pace-mentor-row pace-mentor-row--plain' });
   });
 
   const mentorsSection = new Container([
-    new Text('Mentores', { type: 'h3', class: 'pace-sec-title' }),
+    new Text('Contactos Mentor', { type: 'h3', class: 'pace-sec-title pace-sec-title--plain' }),
     ...mentorRows,
   ], { class: 'pace-home-mentors' });
 
@@ -159,5 +156,5 @@ export default defineRoute(async (config) => {
     mentorsSection,
   ], { class: 'pace-home-grid' });
 
-  return [hero, pdcaWheel, kpiRow, twoColGrid];
+  return [hero, kpiRow, twoColGrid];
 });

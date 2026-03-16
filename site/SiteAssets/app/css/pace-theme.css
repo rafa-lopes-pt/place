@@ -16,50 +16,20 @@
 /* --- Hero welcome banner --- */
 
 .pace-hero {
-  background: linear-gradient(135deg, #9ac433 0%, #7da829 60%, #5a8a4a 100%);
-  color: #ffffff;
-  border-radius: var(--radius);
-  padding: 32px 36px;
-  margin-bottom: 24px;
-  position: relative;
-  overflow: hidden;
-}
-
-.pace-hero h1 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 6px 0;
-  color: #ffffff;
-}
-
-.pace-hero p {
-  font-size: 0.95rem;
-  margin: 0;
-  opacity: 0.92;
-  color: #ffffff;
-}
-
-.pace-hero-wheel {
-  position: absolute;
-  right: 36px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  border: 4px solid rgba(255, 255, 255, 0.25);
+  background: linear-gradient(135deg, #f0f7e6 0%, #e8f5d6 50%, #f9fafb 100%);
+  border: 2px solid #d4e8b0;
+  border-radius: 10px;
+  padding: 48px 40px;
+  margin-bottom: 32px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: 40px;
 }
-
-.pace-hero-wheel::before {
-  content: 'PDCA';
-  font-weight: 700;
-  font-size: 0.85rem;
-  letter-spacing: 1px;
-  color: rgba(255, 255, 255, 0.7);
-}
+.pace-hero__content { max-width: 520px; }
+.pace-hero h1 { font-size: 32px; font-weight: 800; color: var(--pace-dark); margin-bottom: 10px; letter-spacing: -0.5px; }
+.pace-hero p { font-size: 15px; color: var(--pace-text-sec); line-height: 1.6; margin-bottom: 20px; }
+.pace-hero__visual { flex-shrink: 0; }
 
 
 /* --- KPI cards --- */
@@ -77,23 +47,18 @@
 
 .pace-kpi {
   background: var(--pace-surface);
-  border: 1px solid var(--pace-border);
+  border: 2px solid var(--pace-border);
   border-radius: var(--radius);
-  padding: 20px;
-  text-align: center;
+  padding: 20px 22px;
+  transition: border-color 0.2s;
 }
+.pace-kpi:hover { border-color: var(--pace-green); }
 
-.pace-kpi-value {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--pace-dark);
-  line-height: 1.1;
-}
+.pace-kpi-value { font-size: 28px; font-weight: 800; color: var(--pace-dark); line-height: 1; }
 
 .pace-kpi-label {
-  font-size: 0.82rem;
-  color: var(--pace-text-sec);
-  margin-top: 6px;
+  display: block; font-size: 12px; color: var(--pace-text-muted);
+  font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px;
 }
 
 .pace-kpi--highlight {
@@ -104,6 +69,8 @@
 .pace-kpi--highlight .pace-kpi-value {
   color: var(--pace-green);
 }
+
+.pace-kpi-value--green { color: var(--pace-green); }
 
 
 /* --- Status chips --- */
@@ -335,10 +302,10 @@
 .pace-notif-item {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 12px 0;
+  gap: 10px;
+  padding: 10px 0;
   border-bottom: 1px solid var(--pace-border);
-  font-size: 0.88rem;
+  font-size: 13px;
   color: var(--pace-text);
 }
 
@@ -348,11 +315,11 @@
 
 .pace-notif-icon {
   flex-shrink: 0;
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--pace-green);
-  margin-top: 6px;
+  margin-top: 7px;
 }
 
 .pace-notif-icon--warn {
@@ -364,7 +331,7 @@
 }
 
 .pace-notif-date {
-  font-size: 0.75rem;
+  font-size: 11px;
   color: var(--pace-text-muted);
   margin-top: 2px;
 }
@@ -408,6 +375,22 @@
   font-size: 0.8rem;
   color: var(--pace-text-sec);
 }
+
+.pace-sec-title--plain {
+  border-bottom: 1px solid var(--pace-border);
+  font-size: 15px; font-weight: 700;
+}
+.pace-mentor-row--plain {
+  background: none; border: none; border-bottom: 1px solid var(--pace-border);
+  border-radius: 0; margin-bottom: 0; padding: 10px 0;
+}
+.pace-mentor-row--plain:last-child { border-bottom: none; }
+.pace-mentor-avatar--filled {
+  background: var(--pace-green); border: none; color: #ffffff;
+  width: 32px; height: 32px; font-size: 11px; font-weight: 700;
+}
+.pace-mentor-role { font-size: 11px; color: var(--pace-text-muted); }
+.pace-mentor-name { font-size: 13px; }
 
 
 /* --- Process flow --- */
