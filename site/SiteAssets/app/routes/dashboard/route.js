@@ -24,6 +24,7 @@ import {
   buildKpi,
   buildTableHeader,
 } from '../../utils/format-helpers.js';
+import { createPageLayout } from '../../utils/navbar.js';
 
 export default defineRoute((config) => {
   config.setRouteTitle('Dashboard');
@@ -487,5 +488,5 @@ export default defineRoute((config) => {
 
   loadData();
 
-  return [ctaBanner, kpiRow, filterBar, metricsTable, drillDetail];
+  return createPageLayout([ctaBanner, kpiRow, filterBar, metricsTable, drillDetail]);
 });

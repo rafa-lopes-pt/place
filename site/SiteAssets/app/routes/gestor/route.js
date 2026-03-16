@@ -19,6 +19,7 @@ import {
   buildTableHeader,
   buildCollabStub,
 } from '../../utils/format-helpers.js';
+import { createPageLayout } from '../../utils/navbar.js';
 
 export default defineRoute((config) => {
   config.setRouteTitle('Gestor');
@@ -215,5 +216,5 @@ export default defineRoute((config) => {
 
   loadData();
 
-  return [ctaBanner, kpiRow, pendingGrid, collabSection, historySection];
+  return createPageLayout([ctaBanner, kpiRow, pendingGrid, collabSection, historySection]);
 });

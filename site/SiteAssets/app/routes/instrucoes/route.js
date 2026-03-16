@@ -9,6 +9,7 @@ import {
 } from '../../libs/nofbiz/nofbiz.base.js';
 
 import { openNewInitiativeModal } from '../../utils/new-initiative.js';
+import { createPageLayout } from '../../utils/navbar.js';
 
 export default defineRoute((config) => {
   config.setRouteTitle('Instrucoes');
@@ -315,5 +316,5 @@ export default defineRoute((config) => {
     new AccordionGroup(faqItems),
   ], { class: 'pace-faq' });
 
-  return [ctaBanner, profileCards, actionGuides, processFlow, faqSection];
+  return createPageLayout([ctaBanner, profileCards, actionGuides, processFlow, faqSection]);
 });

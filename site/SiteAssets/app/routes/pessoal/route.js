@@ -13,6 +13,7 @@ import { STATUS, statusLabel, chipClass } from '../../utils/status-helpers.js';
 import { openNewInitiativeModal } from '../../utils/new-initiative.js';
 import { openInitiativeDetail } from '../../utils/side-panel-detail.js';
 import { createFilterBar } from '../../utils/filters.js';
+import { createPageLayout } from '../../utils/navbar.js';
 
 export default defineRoute(async (config) => {
   config.setRouteTitle('Pessoal');
@@ -326,5 +327,5 @@ export default defineRoute(async (config) => {
 
   components.push(openSection);
 
-  return components;
+  return createPageLayout(components);
 });

@@ -12,6 +12,7 @@ import { getOwned } from '../utils/iniciativas-api.js';
 import { STATUS } from '../utils/status-helpers.js';
 import { MENTOR_MAP } from '../utils/routing-rules.js';
 import { openNewInitiativeModal } from '../utils/new-initiative.js';
+import { createPageLayout } from '../utils/navbar.js';
 
 export default defineRoute(async (config) => {
   config.setRouteTitle('Inicio');
@@ -156,5 +157,5 @@ export default defineRoute(async (config) => {
     mentorsSection,
   ], { class: 'pace-home-grid' });
 
-  return [hero, kpiRow, twoColGrid];
+  return createPageLayout([hero, kpiRow, twoColGrid]);
 });

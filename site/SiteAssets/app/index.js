@@ -8,7 +8,6 @@ import {
   resolvePath,
   StyleResource,
 } from './libs/nofbiz/nofbiz.base.js';
-import { renderNavbar } from './utils/navbar.js';
 
 await pageReset({
   themePath: resolvePath('@/libs/nofbiz/nofbiz.base.css'),
@@ -44,6 +43,6 @@ if (roleManager.hasRole('mentor')) {
   routes.push('admin');
 }
 
-renderNavbar(routes, user, roleManager);
+ContextStore.set('routes', routes);
 
 new Router(routes);

@@ -19,6 +19,7 @@ import {
   buildKpi,
   buildTableHeader,
 } from '../../utils/format-helpers.js';
+import { createPageLayout } from '../../utils/navbar.js';
 
 export default defineRoute((config) => {
   config.setRouteTitle('Catalogo');
@@ -197,5 +198,5 @@ export default defineRoute((config) => {
 
   loadData();
 
-  return [ctaBanner, kpiRow, toggleContainer, implementadosView, arquivoView];
+  return createPageLayout([ctaBanner, kpiRow, toggleContainer, implementadosView, arquivoView]);
 });

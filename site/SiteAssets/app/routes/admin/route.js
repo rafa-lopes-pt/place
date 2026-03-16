@@ -6,7 +6,7 @@ import {
   ComboBox,
   FormField,
   Toast,
-  ListApi,
+  SiteApi,
   defineRoute,
 } from '../../libs/nofbiz/nofbiz.base.js';
 import { TEAMS } from '../../utils/roles.js';
@@ -15,6 +15,7 @@ import {
   parseJsonArray,
   buildTableHeader,
 } from '../../utils/format-helpers.js';
+import { createPageLayout } from '../../utils/navbar.js';
 
 export default defineRoute((config) => {
   config.setRouteTitle('Admin');
@@ -61,7 +62,8 @@ export default defineRoute((config) => {
   async function loadData() {
     const loading = Toast.loading('A carregar utilizadores...');
     try {
-      const userRolesApi = new ListApi('UserRoles');
+      const siteApi = new SiteApi();
+      const userRolesApi = siteApi.list('UserRoles');
       allUsers = await userRolesApi.getItems({}, { limit: Infinity });
       loading.dismiss();
       buildUI();
@@ -243,5 +245,5 @@ export default defineRoute((config) => {
 
   loadData();
 
-  return [ctaBanner, filterBar, usersTable];
+  return createPageLayout([ctaBanner, filterBar, usersTable]);
 });

@@ -24,6 +24,7 @@ import {
   buildTableHeader,
   buildCollabStub,
 } from '../../utils/format-helpers.js';
+import { createPageLayout } from '../../utils/navbar.js';
 
 export default defineRoute((config) => {
   config.setRouteTitle('Mentoria');
@@ -318,5 +319,5 @@ export default defineRoute((config) => {
 
   loadData();
 
-  return [ctaBanner, kpiRow, validationGrid, openTableSection, collabSection];
+  return createPageLayout([ctaBanner, kpiRow, validationGrid, openTableSection, collabSection]);
 });
