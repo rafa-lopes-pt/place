@@ -8,11 +8,11 @@ import {
   __dayjs,
 } from '../../libs/nofbiz/nofbiz.base.js';
 
-import { getAll } from '../../utils/iniciativas-api.js';
+import { getPersonal, getByUUIDs } from '../../utils/iniciativas-api.js';
+import { getSharedWithMe } from '../../utils/shared-api.js';
 import { STATUS, statusLabel, chipClass } from '../../utils/status-helpers.js';
 import { openNewInitiativeModal } from '../../utils/new-initiative.js';
 import { openInitiativeDetail } from '../../utils/side-panel-detail.js';
-import { createFilterBar } from '../../utils/filters.js';
 import { createPageLayout } from '../../utils/navbar.js';
 
 export default defineRoute(async (config) => {
@@ -21,30 +21,51 @@ export default defineRoute(async (config) => {
   const user = ContextStore.get('currentUser');
   const currentEmail = user.get('email');
 
-  // -- Fetch all initiatives --
-  let allItems = [];
+  // -- Fetch personal initiatives (created or submitted by me) --
+  let personalItems = [];
   try {
-    allItems = await getAll();
+    personalItems = await getPersonal(currentEmail);
   } catch (error) {
-    Toast.error('Erro ao carregar iniciativas.');
+    Toast.error('Erro ao carregar iniciativas pessoais.');
   }
 
-  // -- Partition by ownership --
-  const ownedItems = allItems.filter((item) =>
-    item.CreatedByEmail === currentEmail || item.OwnerEmail === currentEmail
-  );
-  const otherItems = allItems.filter((item) =>
-    item.CreatedByEmail !== currentEmail && item.OwnerEmail !== currentEmail
-  );
+  // -- Fetch shared with me --
+  let sharedRecords = [];
+  try {
+    sharedRecords = await getSharedWithMe(currentEmail);
+  } catch (error) {
+    // Non-critical, continue without shared items
+  }
 
-  // -- Sub-categorize owned items --
-  const drafts = ownedItems.filter((item) => item.Status === STATUS.RASCUNHO);
-  const pendingValidation = ownedItems.filter((item) =>
+  // -- Fetch actual shared initiatives (if any) --
+  let sharedItems = [];
+  if (sharedRecords.length > 0) {
+    try {
+      const sharedUUIDs = sharedRecords.map((r) => r.InitiativeUUID);
+      sharedItems = await getByUUIDs(sharedUUIDs);
+    } catch (error) {
+      // Non-critical
+    }
+  }
+
+  // -- Merge and deduplicate --
+  const seenUUIDs = new Set(personalItems.map((i) => i.UUID));
+  const allMyItems = [...personalItems];
+  for (const item of sharedItems) {
+    if (!seenUUIDs.has(item.UUID)) {
+      allMyItems.push(item);
+      seenUUIDs.add(item.UUID);
+    }
+  }
+
+  // -- Categorize personal items --
+  const drafts = allMyItems.filter((item) => item.Status === STATUS.RASCUNHO);
+  const pendingValidation = allMyItems.filter((item) =>
     item.Status === STATUS.SUBMETIDO || item.Status === STATUS.POR_VALIDAR
   );
-  const revisionItems = ownedItems.filter((item) => item.Status === STATUS.EM_REVISAO);
+  const revisionItems = allMyItems.filter((item) => item.Status === STATUS.EM_REVISAO);
   const activeStatuses = [STATUS.EM_EXECUCAO, STATUS.POR_VALIDAR, STATUS.VALIDADO_GESTOR, STATUS.VALIDADO_MENTOR];
-  const activeItems = ownedItems.filter((item) => activeStatuses.includes(item.Status));
+  const activeItems = allMyItems.filter((item) => activeStatuses.includes(item.Status));
 
   const pendingCount = drafts.length + pendingValidation.length + revisionItems.length;
 
@@ -54,7 +75,7 @@ export default defineRoute(async (config) => {
     const urgent = daysSince > 7;
     const itemClass = urgent ? 'pace-pending-item pace-pending-item--urgent' : 'pace-pending-item';
 
-    const meta = [item.Team || '', statusLabel(item.Status)];
+    const meta = [item.ImpactedTeamOUID || '', statusLabel(item.Status)];
     if (item.SavingType && item.SavingType !== 'Sem saving') {
       meta.push(item.SavingType);
     }
@@ -203,7 +224,7 @@ export default defineRoute(async (config) => {
           item.Title || '-',
           statusLabel(item.Status),
           item.SavingType || 'Sem saving',
-          item.SavingEstimate || '-',
+          item.SavingsValue || '-',
           'Ver',
         ],
         chipIndex: 2,
@@ -219,113 +240,15 @@ export default defineRoute(async (config) => {
     ]));
   }
 
-  // -- Collaboration stubs --
+  // -- Collaboration received --
   const collabReceived = new Container([
-    new Text('Colaboracoes Recebidas', { type: 'h3', class: 'pace-sec-title' }),
-    new Text('Sem colaboracoes recebidas de momento.', { type: 'p', class: 'pace-empty-msg' }),
-    new Button('Ver Todas', {
-      variant: 'secondary',
-      isOutlined: true,
-      onClickHandler: () => alert('Funcionalidade de colaboracoes recebidas em desenvolvimento.'),
-    }),
+    new Text(`Colaboracoes Recebidas (${sharedItems.length})`, { type: 'h3', class: 'pace-sec-title' }),
+    sharedItems.length > 0
+      ? new Text(`${sharedItems.length} iniciativa${sharedItems.length !== 1 ? 's' : ''} partilhada${sharedItems.length !== 1 ? 's' : ''} consigo.`, { type: 'p', class: 'pace-empty-msg' })
+      : new Text('Sem colaboracoes recebidas de momento.', { type: 'p', class: 'pace-empty-msg' }),
   ]);
 
-  const collabSent = new Container([
-    new Text('Colaboracoes Enviadas', { type: 'h3', class: 'pace-sec-title' }),
-    new Text('Sem colaboracoes enviadas de momento.', { type: 'p', class: 'pace-empty-msg' }),
-    new Button('Ver Todas', {
-      variant: 'secondary',
-      isOutlined: true,
-      onClickHandler: () => alert('Funcionalidade de colaboracoes enviadas em desenvolvimento.'),
-    }),
-  ]);
-
-  const collabGrid = new Container([collabReceived, collabSent], { class: 'pace-validation-grid' });
-  components.push(collabGrid);
-
-  // -- Open initiatives table with filters --
-  let filteredItems = [...otherItems];
-  const tableContainer = new Container([], { class: 'pace-open-table-container' });
-
-  const renderOpenTable = () => {
-    if (filteredItems.length === 0) {
-      tableContainer.children = new Text('Sem iniciativas encontradas.', { type: 'p', class: 'pace-empty-msg' });
-      return;
-    }
-
-    const table = buildTable(
-      ['Codigo', 'Iniciativa', 'Estado', 'Colaborador', 'Equipa', 'Saving', 'Valor', ''],
-      filteredItems.map((item) => ({
-        cells: [
-          item.Code || '-',
-          item.Title || '-',
-          statusLabel(item.Status),
-          item.CreatedByName || item.Author || '-',
-          item.Team || '-',
-          item.SavingType || 'Sem saving',
-          item.SavingEstimate || '-',
-          'Ver',
-        ],
-        chipIndex: 2,
-        chipStatus: item.Status,
-        item,
-      })),
-      (item) => openInitiativeDetail(item, 'pessoal'),
-    );
-
-    tableContainer.children = table;
-  };
-
-  const statusOptions = [
-    STATUS.SUBMETIDO,
-    STATUS.VALIDADO_MENTOR,
-    STATUS.EM_EXECUCAO,
-    STATUS.POR_VALIDAR,
-    STATUS.VALIDADO_GESTOR,
-    STATUS.IMPLEMENTADO,
-    STATUS.EM_REVISAO,
-    STATUS.REJEITADO,
-    STATUS.CANCELADO,
-  ];
-
-  const savingOptions = ['Sem saving', 'Hard Saving', 'Soft Saving'];
-
-  const filterBar = createFilterBar({
-    statusOptions,
-    savingOptions,
-    searchPlaceholder: 'Pesquisar iniciativas...',
-    onFilterChange: (filters) => {
-      filteredItems = otherItems.filter((item) => {
-        if (filters.status && statusLabel(item.Status) !== filters.status && item.Status !== filters.status) {
-          return false;
-        }
-        if (filters.savingType && (item.SavingType || 'Sem saving') !== filters.savingType) {
-          return false;
-        }
-        if (filters.searchQuery) {
-          const query = filters.searchQuery.toLowerCase();
-          const searchable = [
-            item.Code, item.Title, item.Team, item.CreatedByName, item.Author,
-          ].filter(Boolean).join(' ').toLowerCase();
-          if (!searchable.includes(query)) return false;
-        }
-        return true;
-      });
-      filterBar.setCount(filteredItems.length);
-      renderOpenTable();
-    },
-  });
-
-  filterBar.setCount(filteredItems.length);
-  renderOpenTable();
-
-  const openSection = new Container([
-    new Text('Iniciativas em Aberto', { type: 'h2', class: 'pace-sec-title' }),
-    filterBar.container,
-    tableContainer,
-  ]);
-
-  components.push(openSection);
+  components.push(collabReceived);
 
   return createPageLayout(components);
 });
