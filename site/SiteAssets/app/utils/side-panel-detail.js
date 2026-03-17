@@ -10,7 +10,7 @@ import {
 
 import { STATUS, STATUS_FLOW, statusLabel, chipClass } from './status-helpers.js';
 import { transitionStatus } from './iniciativas-api.js';
-import { MENTOR_MAP, GESTOR_MAP } from './routing-rules.js';
+import { getAssignedMentor, getAssignedGestor } from './routing-rules.js';
 
 /**
  * Builds and opens a SidePanel showing full detail for an initiative.
@@ -22,14 +22,14 @@ import { MENTOR_MAP, GESTOR_MAP } from './routing-rules.js';
 export function openInitiativeDetail(initiative, context) {
   const user = ContextStore.get('currentUser');
   const currentEmail = user.get('email');
-  const isOwner = initiative.CreatedByEmail === currentEmail || initiative.OwnerEmail === currentEmail;
+  const isOwner = initiative.CreatedByEmail === currentEmail || initiative.SubmittedByEmail === currentEmail;
   const status = initiative.Status;
 
   // -- Header chips --
   const headerChips = [
     new Text(initiative.Code || '', { type: 'span', class: 'pace-chip pace-chip--active pace-detail-code' }),
     new Text(statusLabel(status), { type: 'span', class: `pace-chip ${chipClass(status)}` }),
-    new Text(initiative.Team || '', { type: 'span', class: 'pace-chip pace-chip--inactive' }),
+    new Text(initiative.ImpactedTeamOUID || '', { type: 'span', class: 'pace-chip pace-chip--inactive' }),
   ];
 
   if (initiative.Confidential === true || initiative.Confidential === 'true') {
@@ -42,22 +42,31 @@ export function openInitiativeDetail(initiative, context) {
   ], { class: 'pace-detail-header' });
 
   // -- Dados Gerais grid --
-  const mentor = MENTOR_MAP[initiative.Team];
-  const gestor = GESTOR_MAP[initiative.Team];
+  const mentor = getAssignedMentor(initiative.ImpactedTeamOUID);
+  const gestor = getAssignedGestor(
+    initiative.SavingType || 'Sem saving',
+    initiative.SavingsValue || '0',
+    initiative.ImpactedTeamOUID
+  );
   const createdDate = initiative.Created
     ? __dayjs(initiative.Created).format('DD/MM/YYYY')
     : '-';
 
+  const dadosPairs = [
+    ['Colaborador', initiative.CreatedByName || '-'],
+    ['Equipa', initiative.ImpactedTeamOUID || '-'],
+    ['Mentor Responsavel', mentor ? mentor.displayName : '-'],
+    ['Data Submissao', createdDate],
+    ['Gestor Validador', gestor ? gestor.displayName : '-'],
+    ['Routing', buildRoutingText(initiative)],
+  ];
+  if (initiative.ImplementedDate) {
+    dadosPairs.push(['Data Implementacao', __dayjs(initiative.ImplementedDate).format('DD/MM/YYYY')]);
+  }
+
   const dadosGerais = new Container([
     new Text('Dados Gerais', { type: 'h3', class: 'pace-sec-title' }),
-    buildInfoGrid([
-      ['Colaborador', initiative.CreatedByName || initiative.Author || '-'],
-      ['Equipa', initiative.Team || '-'],
-      ['Mentor Responsavel', mentor ? mentor.displayName : '-'],
-      ['Data Submissao', createdDate],
-      ['Gestor Validador', gestor ? gestor.displayName : '-'],
-      ['Routing', buildRoutingText(initiative)],
-    ]),
+    buildInfoGrid(dadosPairs),
   ]);
 
   // -- Description, Problem, Objective --
@@ -75,7 +84,7 @@ export function openInitiativeDetail(initiative, context) {
   // -- Savings section --
   const savingType = initiative.SavingType || 'Sem saving';
   if (savingType !== 'Sem saving') {
-    const savingValue = initiative.SavingEstimate || '-';
+    const savingValue = initiative.SavingsValue || '-';
     sections.push(new Container([
       new Text('Savings', { type: 'h3', class: 'pace-sec-title' }),
       buildInfoGrid([
@@ -85,44 +94,47 @@ export function openInitiativeDetail(initiative, context) {
     ]));
   }
 
-  // -- Progress timeline --
-  const progressSteps = STATUS_FLOW.map((stepStatus, i) => {
-    const currentIndex = STATUS_FLOW.indexOf(status);
-    let dotClass = 'pace-flow-dot';
-    if (i < currentIndex) dotClass += ' pace-flow-dot--done';
-    else if (i === currentIndex) dotClass += ' pace-flow-dot--active';
+  // -- Progress timeline (skip for catalogo -- terminal-state items only) --
+  let progress;
+  if (context !== 'catalogo') {
+    const progressSteps = STATUS_FLOW.map((stepStatus, i) => {
+      const currentIndex = STATUS_FLOW.indexOf(status);
+      let dotClass = 'pace-flow-dot';
+      if (i < currentIndex) dotClass += ' pace-flow-dot--done';
+      else if (i === currentIndex) dotClass += ' pace-flow-dot--active';
 
-    const connectorClass = i < currentIndex
-      ? 'pace-flow-connector pace-flow-connector--done'
-      : 'pace-flow-connector';
+      const connectorClass = i < currentIndex
+        ? 'pace-flow-connector pace-flow-connector--done'
+        : 'pace-flow-connector';
 
-    const step = new Container([
-      new Container([
-        new Text(String(i + 1), { type: 'span' }),
-      ], { class: dotClass }),
-      new Text(statusLabel(stepStatus), { type: 'span', class: 'pace-flow-label' }),
-    ], { class: 'pace-flow-step' });
+      const step = new Container([
+        new Container([
+          new Text(String(i + 1), { type: 'span' }),
+        ], { class: dotClass }),
+        new Text(statusLabel(stepStatus), { type: 'span', class: 'pace-flow-label' }),
+      ], { class: 'pace-flow-step' });
 
-    if (i < STATUS_FLOW.length - 1) {
-      return new Container([
-        step,
-        new Container([], { class: connectorClass }),
-      ], { as: 'span', class: 'pace-flow-step-wrap' });
-    }
-    return step;
-  });
+      if (i < STATUS_FLOW.length - 1) {
+        return new Container([
+          step,
+          new Container([], { class: connectorClass }),
+        ], { as: 'span', class: 'pace-flow-step-wrap' });
+      }
+      return step;
+    });
 
-  const progress = new Container([
-    new Text('Progresso', { type: 'h3', class: 'pace-sec-title' }),
-    new Container(progressSteps, { class: 'pace-flow' }),
-  ]);
+    progress = new Container([
+      new Text('Progresso', { type: 'h3', class: 'pace-sec-title' }),
+      new Container(progressSteps, { class: 'pace-flow' }),
+    ]);
+  }
 
   // -- Content --
   const content = new Container([
     header,
     dadosGerais,
     ...sections,
-    progress,
+    ...(progress ? [progress] : []),
   ], { class: 'pace-detail-content' });
 
   // -- Footer action buttons --
@@ -169,7 +181,7 @@ function buildTextSection(title, text) {
 function buildRoutingText(initiative) {
   const savingType = initiative.SavingType || 'Sem saving';
   if (savingType === 'Sem saving') return 'Automatico (sem saving)';
-  const value = parseFloat(String(initiative.SavingEstimate || '0').replace(/[^\d.]/g, '')) || 0;
+  const value = parseFloat(String(initiative.SavingsValue || '0').replace(/[^\d.]/g, '')) || 0;
   if (savingType === 'Soft Saving' && value < 10000) return 'Gestor RD (Soft < 10k)';
   if (savingType === 'Hard Saving' || value >= 10000) return 'Gestor RF / COMEX';
   return 'Gestor RD';

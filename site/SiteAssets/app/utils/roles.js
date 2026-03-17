@@ -8,18 +8,11 @@ export const ROLES = {
   EXECUTIVO: 'executivo',
 };
 
-export const TEAMS = [
-  'Dir. Comercial',
-  'Operacoes',
-  'Digital',
-  'Risco',
-  'Financeiro',
-];
-
 export const PERMISSION_MAP = {
   inicio: ['*'],
   instrucoes: ['*'],
   pessoal: ['colaborador', 'resp_equipa', 'gestor', 'mentor'],
+  departamento: ['colaborador', 'resp_equipa', 'gestor', 'mentor'],
   mentoria: ['mentor'],
   gestor: ['gestor'],
   catalogo: ['*'],
@@ -42,6 +35,14 @@ export const PERMISSION_MAP = {
  */
 export function getRoleManager() {
   return ContextStore.get('roleManager');
+}
+
+/**
+ * Returns the current user's OUID from ContextStore (set during app init).
+ * @returns {string}
+ */
+export function getUserOUID() {
+  return ContextStore.get('userOUID') || '';
 }
 
 /**

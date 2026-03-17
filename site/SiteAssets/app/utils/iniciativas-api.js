@@ -1,6 +1,7 @@
-import { ListApi, generateUUIDv4 } from '../libs/nofbiz/nofbiz.base.js';
+import { SiteApi, generateUUIDv4 } from '../libs/nofbiz/nofbiz.base.js';
 
-export const listApi = new ListApi('Iniciativas');
+const siteApi = new SiteApi();
+const listApi = siteApi.list('Iniciativas');
 
 /**
  * Fetches all initiatives from the Iniciativas list.
@@ -12,7 +13,6 @@ export async function getAll() {
 
 /**
  * Fetches a single initiative by UUID.
- * Returns the first match (UUIDs are unique).
  * @param {string} uuid
  * @returns {Promise<Array>}
  */
@@ -38,12 +38,42 @@ export async function getByStatus(status) {
 }
 
 /**
- * Fetches initiatives filtered by Team.
- * @param {string} team
+ * Fetches personal initiatives: created by or submitted by the given email.
+ * Uses CAML OR query for server-side filtering.
+ * @param {string} email
  * @returns {Promise<Array>}
  */
-export async function getByTeam(team) {
-  return listApi.getItems({ Team: team });
+export async function getPersonal(email) {
+  return listApi.getItems({
+    $or: [
+      { CreatedByEmail: email },
+      { SubmittedByEmail: email },
+    ],
+  }, { limit: Infinity });
+}
+
+/**
+ * Fetches initiatives by team scope (array of OUIDs).
+ * Uses CAML multi-value OR on ImpactedTeamOUID.
+ * @param {string[]} ouids
+ * @returns {Promise<Array>}
+ */
+export async function getByTeamScope(ouids) {
+  return listApi.getItems({
+    ImpactedTeamOUID: { value: ouids, operator: 'Or' },
+  }, { limit: Infinity });
+}
+
+/**
+ * Fetches initiatives by an array of UUIDs.
+ * @param {string[]} uuids
+ * @returns {Promise<Array>}
+ */
+export async function getByUUIDs(uuids) {
+  if (uuids.length === 0) return [];
+  return listApi.getItems({
+    UUID: { value: uuids, operator: 'Or' },
+  }, { limit: Infinity });
 }
 
 /**

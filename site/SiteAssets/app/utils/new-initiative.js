@@ -12,15 +12,51 @@ import {
   FieldLabel,
   Toast,
   View,
+  ContextStore,
   __zod,
 } from '../libs/nofbiz/nofbiz.base.js';
 
-import { TEAMS } from './roles.js';
+import { getUserOUID } from './roles.js';
+import { getGovernanceOUID } from './equipas-api.js';
 import { create, update } from './iniciativas-api.js';
 import { STATUS } from './status-helpers.js';
 import { getAssignedMentor, getAssignedGestor } from './routing-rules.js';
 
 const SAVING_TYPES = ['Sem saving', 'Hard Saving', 'Soft Saving'];
+
+const TEAM_OPTIONS = [
+  { label: 'COM-GOV - Commercial', value: 'COM-GOV' },
+  { label: 'COM-BKP - Banking Partnerships', value: 'COM-BKP' },
+  { label: 'COM-BRP - Broker Partnerships', value: 'COM-BRP' },
+  { label: 'COM-DRC - Strategy & Planning DRC', value: 'COM-DRC' },
+  { label: 'COM-MOB - Mobility OEM & Top Dealers', value: 'COM-MOB' },
+  { label: 'COM-RMI - Relational Marketing & Insurance', value: 'COM-RMI' },
+  { label: 'COM-STF - Stock Financing', value: 'COM-STF' },
+  { label: 'FIN-GOV - Finance', value: 'FIN-GOV' },
+  { label: 'FIN-CTB - Contabilidade e Tesouraria', value: 'FIN-CTB' },
+  { label: 'FIN-GRF - Granting & Financing', value: 'FIN-GRF' },
+  { label: 'ITD-GOV - IT & Digital', value: 'ITD-GOV' },
+  { label: 'ITD-CGP - COE IT Governance', value: 'ITD-CGP' },
+  { label: 'ITD-DAT - COE Data', value: 'ITD-DAT' },
+  { label: 'ITD-ODD - TIBRO ODD', value: 'ITD-ODD' },
+  { label: 'ITD-SRV - IT Service Delivery', value: 'ITD-SRV' },
+  { label: 'LEG-JRI - Juridico e Relacoes Inst.', value: 'LEG-JRI' },
+  { label: 'LEG-JUR - Juridico', value: 'LEG-JUR' },
+  { label: 'OPS-GOV - Operations', value: 'OPS-GOV' },
+  { label: 'OPS-BSP - Operations & Business Support', value: 'OPS-BSP' },
+  { label: 'OPS-CCR - Customer Care & Rebound', value: 'OPS-CCR' },
+  { label: 'OPS-COL - Operational Collections', value: 'OPS-COL' },
+  { label: 'RSK-GOV - Risk & Compliance', value: 'RSK-GOV' },
+  { label: 'RSK-ANA - Risk Analytics', value: 'RSK-ANA' },
+  { label: 'RSK-REG - Risk Governance & Regulatory', value: 'RSK-REG' },
+  { label: 'RSK-CCT - Conduct & Control', value: 'RSK-CCT' },
+  { label: 'STR-GOV - Strategy & Transformation', value: 'STR-GOV' },
+  { label: 'STR-AGI - Transformation & COE Agile', value: 'STR-AGI' },
+  { label: 'STR-BRD - Brand Communication & Offer', value: 'STR-BRD' },
+  { label: 'STR-COO - Direccao COO & Transformation', value: 'STR-COO' },
+  { label: 'STR-MKT - Strategic Marketing & COE CX', value: 'STR-MKT' },
+  { label: 'STR-SYN - Group Synergies', value: 'STR-SYN' },
+];
 
 /**
  * Opens a Modal form for creating a new initiative.
@@ -43,7 +79,7 @@ export function openEditInitiativeModal(initiative, onSuccess) {
 
 function buildInitiativeModal(initiative, onSuccess) {
   const isEdit = !!initiative;
-  const z = __zod.z;
+  const z = __zod;
 
   // -- Form fields --
   const titleField = new FormField({
@@ -54,28 +90,27 @@ function buildInitiativeModal(initiative, onSuccess) {
   const descriptionField = new FormField({ value: initiative?.Description || '' });
 
   const teamField = new FormField({
-    value: initiative?.Team || '',
+    value: initiative?.ImpactedTeamOUID || '',
     validatorCallback: (v) => {
-      const text = v && typeof v === 'object' ? v.label : v;
-      return z.string().min(1).safeParse(text).success;
+      const val = v && typeof v === 'object' ? v.value : v;
+      return z.string().min(1).safeParse(val).success;
     },
   });
 
-  const savingTypeField = new FormField({ value: initiative?.SavingType || '' });
-  const estimateField = new FormField({ value: initiative?.SavingEstimate || '' });
+  const savingTypeField = new FormField({ value: initiative?.SavingType || 'Sem saving' });
+  const estimateField = new FormField({ value: initiative?.SavingsValue || '' });
   const problemField = new FormField({ value: initiative?.Problem || '' });
   const objectiveField = new FormField({ value: initiative?.Objective || '' });
-  const confidentialField = new FormField({ value: initiative?.Confidential === true || initiative?.Confidential === 'true' });
+  const confidentialField = new FormField({ value: initiative?.IsConfidential === true || initiative?.IsConfidential === 'true' });
 
   // -- Schema for basic validation (title + team) --
   const schema = new FormSchema({ title: titleField, team: teamField });
 
   // -- Form inputs --
-  const titleInput = new FieldLabel('Titulo *', new TextInput(titleField, { placeholder: 'Nome da iniciativa...' }));
-  const descInput = new FieldLabel('Descricao', new TextArea(descriptionField, { placeholder: 'Descreva a iniciativa...', rows: 3 }));
+  const titleInput = new FieldLabel('Titulo *', new TextInput(titleField, { placeholder: 'Ex: Reducao do tempo de...' }));
+  const descInput = new FieldLabel('Descricao', new TextArea(descriptionField, { placeholder: 'Descreva a oportunidade...', rows: 3 }));
 
-  const teamOptions = TEAMS.map((t) => ({ label: t, value: t }));
-  const teamCombo = new FieldLabel('Equipa *', new ComboBox(teamField, teamOptions, { placeholder: 'Seleccionar equipa...' }));
+  const teamCombo = new FieldLabel('Equipa *', new ComboBox(teamField, TEAM_OPTIONS, { placeholder: 'Seleccionar...' }));
 
   const savingTypeCombo = new FieldLabel('Tipo de Saving', new ComboBox(savingTypeField, SAVING_TYPES, { placeholder: 'Seleccionar...' }));
 
@@ -109,8 +144,7 @@ function buildInitiativeModal(initiative, onSuccess) {
   const formContent = new Container([
     titleInput,
     descInput,
-    teamCombo,
-    savingTypeCombo,
+    new Container([teamCombo, savingTypeCombo], { class: 'pace-form-row' }),
     estimateView,
     problemInput,
     objectiveInput,
@@ -120,30 +154,28 @@ function buildInitiativeModal(initiative, onSuccess) {
   // -- Collect field values into a record --
   const collectFields = () => {
     const teamVal = teamField.value;
-    const teamText = teamVal && typeof teamVal === 'object' ? teamVal.label : (teamVal || '');
+    const impactedTeamOUID = teamVal && typeof teamVal === 'object' ? teamVal.value : (teamVal || '');
     const savingVal = savingTypeField.value;
     const savingText = savingVal && typeof savingVal === 'object' ? savingVal.label : (savingVal || 'Sem saving');
-    const mentor = getAssignedMentor(teamText);
-    const gestor = getAssignedGestor(savingText, estimateField.value, teamText);
+    const mentor = getAssignedMentor(impactedTeamOUID);
+    const gestor = getAssignedGestor(savingText, estimateField.value, impactedTeamOUID);
 
     return {
       Title: titleField.value,
       Description: descriptionField.value,
-      Team: teamText,
+      ImpactedTeamOUID: impactedTeamOUID,
       SavingType: savingText,
-      SavingEstimate: estimateField.value,
+      SavingsValue: estimateField.value,
       Problem: problemField.value,
       Objective: objectiveField.value,
-      Confidential: confidentialField.value,
-      MentorEmail: mentor ? mentor.email : '',
-      MentorName: mentor ? mentor.displayName : '',
-      GestorEmail: gestor ? gestor.email : '',
-      GestorName: gestor ? gestor.displayName : '',
+      IsConfidential: confidentialField.value,
+      Mentor: mentor ? { email: mentor.email, displayName: mentor.displayName } : '',
+      GestorValidator: gestor ? { email: gestor.email, displayName: gestor.displayName } : '',
     };
   };
 
   // -- Action handlers --
-  const draftBtn = new Button('Guardar Rascunho', {
+  const draftBtn = new Button('Gravar Rascunho', {
     variant: 'secondary',
     onClickHandler: async () => {
       if (!schema.isValid) {
@@ -155,11 +187,18 @@ function buildInitiativeModal(initiative, onSuccess) {
       draftBtn.isLoading = true;
       const loading = Toast.loading('A guardar rascunho...');
       try {
-        const fields = { ...collectFields(), Status: STATUS.RASCUNHO };
         if (isEdit) {
-          await update(initiative.ID, fields, initiative['odata.etag']);
+          await update(initiative.ID, { ...collectFields(), Status: STATUS.RASCUNHO }, initiative['odata.etag']);
         } else {
-          await create(fields);
+          const currentUser = ContextStore.get('currentUser');
+          const createdByIdentity = { email: currentUser.get('email'), displayName: currentUser.get('displayName') };
+          await create({
+            ...collectFields(),
+            Status: STATUS.RASCUNHO,
+            CreatedBy: createdByIdentity,
+            CreatedByEmail: currentUser.get('email'),
+            CreatedByName: currentUser.get('displayName'),
+          });
         }
         loading.success('Rascunho guardado com sucesso');
         modal.close();
@@ -184,11 +223,24 @@ function buildInitiativeModal(initiative, onSuccess) {
       submitBtn.isLoading = true;
       const loading = Toast.loading('A submeter iniciativa...');
       try {
-        const fields = { ...collectFields(), Status: STATUS.SUBMETIDO };
+        const currentUser = ContextStore.get('currentUser');
+        const identity = { email: currentUser.get('email'), displayName: currentUser.get('displayName') };
+        const submitFields = {
+          ...collectFields(),
+          Status: STATUS.SUBMETIDO,
+          SubmittedDate: new Date().toISOString().split('T')[0],
+          SubmittedBy: identity,
+          SubmittedByEmail: currentUser.get('email'),
+        };
         if (isEdit) {
-          await update(initiative.ID, fields, initiative['odata.etag']);
+          await update(initiative.ID, submitFields, initiative['odata.etag']);
         } else {
-          await create(fields);
+          await create({
+            ...submitFields,
+            CreatedBy: identity,
+            CreatedByEmail: currentUser.get('email'),
+            CreatedByName: currentUser.get('displayName'),
+          });
         }
         loading.success('Iniciativa submetida com sucesso');
         modal.close();
@@ -210,12 +262,13 @@ function buildInitiativeModal(initiative, onSuccess) {
   const footer = new Container([cancelBtn, draftBtn, submitBtn], { class: 'pace-modal-footer' });
 
   const modal = new Modal([
-    new Text(isEdit ? 'Editar Iniciativa' : 'Nova Iniciativa', { type: 'h2', class: 'pace-modal-title' }),
+    new Text(isEdit ? 'Editar Iniciativa PDCA' : 'Nova Iniciativa PDCA', { type: 'h2', class: 'pace-modal-title' }),
     formContent,
     footer,
   ], {
-    closeOnFocusLoss: true,
+    closeOnFocusLoss: false,
     class: 'pace-initiative-modal',
+    containerSelector: 'body',
   });
 
   modal.render();
