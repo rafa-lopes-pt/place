@@ -153,7 +153,7 @@ export default defineRoute(async (config) => {
       variant: 'primary',
       onClickHandler: () => {
         openNewInitiativeModal(() => {
-          Toast.success('Iniciativa criada com sucesso.');
+          location.reload();
         });
       },
     }),

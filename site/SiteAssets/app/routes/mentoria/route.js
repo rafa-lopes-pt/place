@@ -25,6 +25,7 @@ import {
   buildCollabStub,
 } from '../../utils/format-helpers.js';
 import { createPageLayout } from '../../utils/navbar.js';
+import { openInitiativeDetail } from '../../utils/side-panel-detail.js';
 
 export default defineRoute((config) => {
   config.setRouteTitle('Mentoria');
@@ -37,7 +38,16 @@ export default defineRoute((config) => {
 
   // -- layout containers (populated after data load) --
 
-  const ctaBanner = new Container([], { class: 'pace-cta' });
+  const ctaBanner = new Container(
+    [
+      new Text('Mentoria', { type: 'h2', class: 'pace-cta-title' }),
+      new Text(
+        'Acompanhe as iniciativas da sua equipa, valide projectos submetidos e confirme savings implementados.',
+        { type: 'p' }
+      ),
+    ],
+    { class: 'pace-cta' }
+  );
   const kpiRow = new Container([], { class: 'pace-kpi-row' });
   const validationGrid = new Container([], { class: 'pace-validation-grid' });
   const openTableSection = new Container([]);
@@ -61,49 +71,13 @@ export default defineRoute((config) => {
   function buildUI() {
     const submetidos = allItems.filter((i) => i.Status === STATUS.SUBMETIDO);
     const porValidar = allItems.filter((i) => i.Status === STATUS.POR_VALIDAR);
-    const emExecucao = allItems.filter((i) => i.Status === STATUS.EM_EXECUCAO);
-    const implementados = allItems.filter((i) => i.Status === STATUS.IMPLEMENTADO);
-
     const pendingCount = submetidos.length + porValidar.length;
-    const savingsTotal = implementados.reduce(
-      (sum, i) => sum + parseSaving(i.SavingValidated),
-      0
-    );
-
-    // CTA banner
-    ctaBanner.children = [
-      new Container(
-        [
-          new Text(`${pendingCount} accoes pendentes`, {
-            type: 'span',
-            class: 'pace-cta-text',
-          }),
-          new Text(
-            ` -- ${submetidos.length} validacoes de projecto - ${porValidar.length} confirmacoes de savings`,
-            { type: 'span', class: 'pace-cta-text' }
-          ),
-        ],
-        { as: 'div' }
-      ),
-      new Button('Validar Iniciativas', {
-        variant: 'primary',
-        onClickHandler: () => {
-          if (validationGrid.instance) {
-            validationGrid.instance[0].scrollIntoView({ behavior: 'smooth' });
-          }
-        },
-      }),
-    ];
 
     // KPIs
     kpiRow.children = [
-      buildKpi(String(allItems.length), 'Total Carteira'),
-      buildKpi(String(emExecucao.length), 'Em Execucao'),
-      buildKpi(
-        `EUR ${(savingsTotal / 1000).toFixed(1)}k`,
-        'Savings Validados',
-        true
-      ),
+      buildKpi(String(pendingCount), 'Accoes Pendentes', true),
+      buildKpi(String(submetidos.length), 'Validacoes de Projecto'),
+      buildKpi(String(porValidar.length), 'Confirmacoes de Savings'),
     ];
 
     // Validation columns
@@ -160,7 +134,7 @@ export default defineRoute((config) => {
     const rightInfo =
       type === 'projecto'
         ? `${days}d pendente`
-        : `EUR ${parseSaving(item.SavingEstimate).toLocaleString()}`;
+        : `EUR ${parseSaving(item.SavingsValue).toLocaleString()}`;
 
     const actionLabel = type === 'projecto' ? 'Validar' : 'Confirmar';
 
@@ -184,9 +158,7 @@ export default defineRoute((config) => {
             new Text(rightInfo, { type: 'span', class: 'pace-pending-item-meta' }),
             new Button(actionLabel, {
               variant: 'secondary',
-              onClickHandler: () => {
-                alert('Detalhe da iniciativa (placeholder)');
-              },
+              onClickHandler: () => openInitiativeDetail(item, 'mentoria'),
             }),
           ],
           { class: 'pace-pending-item-actions' }
@@ -284,16 +256,14 @@ export default defineRoute((config) => {
   }
 
   function buildTableRow(item) {
-    const saving = parseSaving(item.SavingEstimate);
+    const saving = parseSaving(item.SavingsValue);
     return new Container(
       [
         new Text(item.Code, { type: 'span' }),
         new Button(item.Title, {
           variant: 'secondary',
           isOutlined: true,
-          onClickHandler: () => {
-            alert('Detalhe da iniciativa (placeholder)');
-          },
+          onClickHandler: () => openInitiativeDetail(item, 'mentoria'),
           class: 'pace-table-link-btn',
         }),
         new Text(statusLabel(item.Status), {
@@ -306,9 +276,7 @@ export default defineRoute((config) => {
         new Text(saving ? `EUR ${saving.toLocaleString()}` : '---', { type: 'span' }),
         new Button('Ver', {
           variant: 'secondary',
-          onClickHandler: () => {
-            alert('Detalhe da iniciativa (placeholder)');
-          },
+          onClickHandler: () => openInitiativeDetail(item, 'mentoria'),
         }),
       ],
       { class: 'pace-table-row' }

@@ -30,7 +30,7 @@ export async function getTeamScope(ouid) {
  * @returns {Promise<Array>}
  */
 export async function getAllDepartments() {
-  return listApi.getItems({}, { limit: Infinity });
+  return listApi.getItems(undefined, { limit: Infinity });
 }
 
 /**

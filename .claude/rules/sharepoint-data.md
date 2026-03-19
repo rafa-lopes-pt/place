@@ -8,7 +8,7 @@ API-specific gotchas that cause incorrect code if not followed.
 
 - `ListApi.getItems()` uses CAML queries (`CAMLQueryObject` or raw CAML XML string), NOT REST filter syntax
 - `CAMLQueryObject` supports all operators: string values default to `Eq`; use `{ value, operator }` for explicit operators (Neq, Gt, Lt, Geq, Leq, Contains, BeginsWith, IsNull, IsNotNull); use `{ value: [...], operator: 'Or', match? }` for same-field multi-value OR; use `$or: [...]` for cross-field OR
-- `getItems()` accepts an options object: `{ limit }` (default 1000, supports `Infinity` for all items)
+- `getItems()` accepts an options object: `{ limit, orderBy, viewFields }` -- limit defaults to all items, orderBy sorts via CAML OrderBy, viewFields restricts returned fields
 - `getItems()` automatically paginates in 500-item pages
 - Method is `createItem()`, not `addItem()`
 - `updateItem(id, fields, etag)` -- partial update via MERGE, only specified fields are modified; etag is required for optimistic concurrency
@@ -21,6 +21,8 @@ API-specific gotchas that cause incorrect code if not followed.
 - Only create Text or Note (multi-line text) fields -- never use other SharePoint field types
 - Note fields: always `richText: false` (set automatically by `createField`)
 - All operations are async (return Promises)
+- `sanitizeQuery(fields)` -- strips null/undefined entries from a query object before passing to `getItems()`. For Or conditions, filters null/undefined from the value array. Returns a clean `CAMLQueryObject` or `undefined` if nothing remains
+- Input validation: all write methods throw `SystemError` with descriptive messages on invalid inputs (null fields, empty objects, non-integer IDs, empty ETags). Errors are `breaksFlow: true` -- they indicate programmer mistakes, not user errors
 
 ## Field Value Serialization
 

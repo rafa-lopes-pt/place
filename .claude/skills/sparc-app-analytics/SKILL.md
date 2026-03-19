@@ -74,11 +74,12 @@ const chartData = items.map(item => ({ label: item.Category, value: Number(item.
 
 1. **Read rules** (mandatory first step)
 2. **Read reference documentation** for chart APIs
-3. **Understand the data** -- what SharePoint lists or data sources feed the charts
-4. **Design the layout** -- which SPARC containers hold charts, responsive considerations
-5. **Implement** charts within defineRoute, with proper data loading and error handling
-6. **Test resize behavior** -- charts should respond to container size changes
-7. **No build step** -- app code runs directly against the bundled lib files. Only source agents (`sparc-source-*`) run `npm run build`.
+3. **Discover existing solutions** -- read `.claude/sparc-api-reference.md` for available components and utilities, then grep the app's `utils/` and existing routes for implementations that already solve the problem. See `.claude/rules/discovery-workflow.md`
+4. **Understand the data** -- what SharePoint lists or data sources feed the charts
+5. **Design the layout** -- which SPARC containers hold charts, responsive considerations
+6. **Implement** charts within defineRoute, with proper data loading and error handling
+7. **Test resize behavior** -- charts should respond to container size changes
+8. **No build step** -- app code runs directly against the bundled lib files. Only source agents (`sparc-source-*`) run `npm run build`.
 
 ## Reference Files
 

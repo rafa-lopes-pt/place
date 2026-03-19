@@ -82,11 +82,12 @@ fileInput.addEventListener('change', async (e) => {
 
 1. **Read rules** (mandatory first step)
 2. **Read reference documentation** for CSV/analysis APIs
-3. **Understand the data flow** -- upload source, transformation steps, output format
-4. **Design the UI** -- file inputs, progress indicators, result displays, download buttons
-5. **Implement** within defineRoute, with error handling for malformed CSV data
-6. **Handle edge cases** -- empty files, wrong delimiters, missing headers
-7. **No build step** -- app code runs directly against the bundled lib files. Only source agents (`sparc-source-*`) run `npm run build`.
+3. **Discover existing solutions** -- read `.claude/sparc-api-reference.md` for available components and utilities, then grep the app's `utils/` and existing routes for implementations that already solve the problem. See `.claude/rules/discovery-workflow.md`
+4. **Understand the data flow** -- upload source, transformation steps, output format
+5. **Design the UI** -- file inputs, progress indicators, result displays, download buttons
+6. **Implement** within defineRoute, with error handling for malformed CSV data
+7. **Handle edge cases** -- empty files, wrong delimiters, missing headers
+8. **No build step** -- app code runs directly against the bundled lib files. Only source agents (`sparc-source-*`) run `npm run build`.
 
 ## Reference Files
 

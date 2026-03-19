@@ -466,8 +466,8 @@ export default defineRoute((config) => {
                 }),
                 new Text(ownerName(item), { type: 'span' }),
                 new Text(
-                  parseSaving(item.SavingValidated || item.SavingEstimate)
-                    ? `EUR ${parseSaving(item.SavingValidated || item.SavingEstimate).toLocaleString()}`
+                  parseSaving(item.SavingValidated || item.SavingsValue)
+                    ? `EUR ${parseSaving(item.SavingValidated || item.SavingsValue).toLocaleString()}`
                     : '---',
                   { type: 'span' }
                 ),

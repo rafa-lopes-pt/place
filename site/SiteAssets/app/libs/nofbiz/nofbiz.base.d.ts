@@ -1970,6 +1970,10 @@ type CAMLCondition = string | {
 type CAMLQueryObject = Record<string, CAMLCondition> & {
     $or?: CAMLQueryObject[];
 };
+interface CAMLOrderByField {
+    field: string;
+    ascending?: boolean;
+}
 
 interface SPList {
     Id: string;
@@ -2023,23 +2027,45 @@ interface ListApiOptions {
     siteApi?: SiteApi;
 }
 interface GetItemsOptions {
-    /** Maximum total items to return across all pages. Default: 1000. */
+    /** Maximum total items to return across all pages. Defaults to all items. */
     limit?: number;
+    /** Sort fields. Each entry specifies a field name and optional ascending direction (default: true). */
+    orderBy?: CAMLOrderByField[];
+    /** Restrict which fields are returned. Maps to CAML ViewFields. */
+    viewFields?: string[];
+}
+interface GetItemsPagedOptions extends GetItemsOptions {
+    /** Items per page (CAML RowLimit). Defaults to 500. Must be a positive integer. */
+    pageSize?: number;
+}
+interface PaginatedResult<T> {
+    /** Items in the current page (already parsed via parseFieldValues). */
+    items: (T & SPItemWithETag)[];
+    /** Fetch the next page. Null when no more pages or limit reached. */
+    next: (() => Promise<PaginatedResult<T>>) | null;
 }
 declare class ListApi {
     #private;
     protected _siteApi: SiteApi;
     constructor(title: string, options?: ListApiOptions);
+    private _validateAndSerializeFields;
+    private _validateItemId;
+    private _validateETag;
+    private _validateNonEmptyString;
     private _buildAndClause;
     private _buildOrClause;
+    private _validateQueryObject;
+    private _validateCondition;
     private _parseCondition;
     private _buildWhereContent;
-    protected _parseCAMLQueryObject(args: CAMLQueryObject): string;
+    private _buildViewXml;
+    protected _parseCAMLQueryObject(args: CAMLQueryObject, options?: GetItemsOptions, rowLimit?: number): string;
     protected _createCAMLQueryPayload(camlQuery: string, pagingInfo?: string | null): {
         query: Record<string, unknown>;
     };
-    protected _queryRequest<T>(args: CAMLQueryObject | string, limit?: number): Promise<(T & SPItemWithETag)[]>;
+    protected _queryRequest<T>(args: CAMLQueryObject | string | undefined, options?: GetItemsOptions): Promise<(T & SPItemWithETag)[]>;
     getItems<T>(query?: CAMLQueryObject | string, options?: GetItemsOptions): Promise<(T & SPItemWithETag)[]>;
+    getItemsPaged<T>(query?: CAMLQueryObject | string, options?: GetItemsPagedOptions): Promise<PaginatedResult<T>>;
     getItemByTitle<T>(title: string): Promise<(T & SPItemWithETag)[]>;
     getItemByUUID<T>(uuid: string): Promise<(T & SPItemWithETag)[]>;
     getOwnedItems<T>(userId?: string): Promise<(T & SPItemWithETag)[]>;
@@ -2054,6 +2080,22 @@ declare class ListApi {
     get endpoint(): string;
     get listItemType(): string;
 }
+/**
+ * Strips null/undefined entries from a query fields object before passing
+ * it to `ListApi.getItems()`. Useful when building queries from optional
+ * filter values -- avoids manually checking each field before constructing
+ * the query object.
+ *
+ * For `Or` conditions, null/undefined entries are removed from the value
+ * array. If all values are filtered out, the entire field is omitted.
+ *
+ * @returns A cleaned `CAMLQueryObject`, or `undefined` if no conditions remain.
+ */
+/** Input type for sanitizeQuery -- mirrors CAMLQueryObject but allows nullable values. */
+type SanitizeQueryInput = Record<string, CAMLCondition | null | undefined> & {
+    $or?: SanitizeQueryInput[];
+};
+declare function sanitizeQuery(fields: SanitizeQueryInput): CAMLQueryObject | undefined;
 
 interface CreateListOptions {
     description?: string;
@@ -2120,6 +2162,7 @@ declare class SiteApi {
      * @returns A Promise resolving with the {@link SPWeb} properties.
      */
     getWebInfo(): Promise<SPWeb>;
+    private _validateTitle;
     /**
      * Creates a new SharePoint list and returns a cached {@link ListApi} instance
      * for immediate use.
@@ -2826,5 +2869,5 @@ declare global {
     }
 }
 
-export { AccordionGroup, AccordionItem, Button, Card, CheckBox, ComboBox, Container, ContextStore, CurrentUser, DateInput, Dialog, ErrorBoundary, FieldLabel, FormControl, FormField, FormSchema, Fragment, HTMDElement, Image, LinkButton, List, Loader, Modal, NavigationEvent, NumberInput, PeoplePicker, RoleManager, Router, SP_ACCEPT_MINIMAL, SidePanel, SimpleElapsedTimeBenchmark, SiteApi, StyleResource, SystemError, TabGroup, Text, TextArea, TextInput, Toast, UserIdentity, View, ViewSwitcher, copyToClipboard, defineRoute, enforceStrictObject, escapeAttr, escapeHtml, fromFieldValue, generateRuntimeUID, generateUUIDv4, getFullUserDetails, getIcon, getUserProfile, pageReset, refreshRequestDigest, resolvePath, searchUsers, spDELETE, spGET, spMERGE, spPOST, startDigestTimer, stopDigestTimer, toFieldValue };
-export type { AccordionGroupProps, AccordionItemProps, ButtonProps, CAMLCondition, CAMLOperator, CAMLQueryObject, CAMLQueryResponse, CAMLValueOperator, CardProps, CardVariants, ChildrenOptions, ComboBoxDataset, ComboBoxOptionProps, ComboBoxProps, ContainerProps, ContainerTags, ContextStoreEntry, CreateFieldOptions, CreateListOptions, DATE_FORMATS, DateInputProps, DialogProps, DialogVariants, ErrorBoundaryProps, ErrorOptions, FieldLabelPosition, FieldLabelProps, FormControlProps, FormFieldProps, FormFieldType, FragmentProps, FullUserDetails, GetItemsOptions, GroupHierarchyEntry, HTMDElementInterface, HTMDElementProps, HTMDNode, HTMDSingleNode, ImageProps, InitializeOptions, LinkButtonProps, ListApiOptions, ListProps, LoaderProps, ModalProps, NavigationGuardFn, NavigationOptions, NumberInputProps, PeoplePickerProps, PeopleSearchOptions, PeopleSearchResult, PeopleSearchResultData, PermissionMap, ProfileProperty, RouteConfig, RouteOptions, RoutePaths, RouterProps, RuntimeEventListenerOptions, RuntimeEventOptions, SPCollectionResponse, SPField, SPFieldValue, SPGroup, SPItemWithETag, SPList, SPRequestOptions, SPSimpleValue, SPUser, SPWeb, SidePanelProps, StyleResourceOptions, TabConfig, TabGroupProps, TextAreaProps, TextInputProps, TextProps, ToastLoadingController, ToastOptions, ToastPromiseMessages, ToastType, Unsubscribe, UserProfile, UserProfilePayload, ViewProps, ViewSwitcherProps, pageResetOptions };
+export { AccordionGroup, AccordionItem, Button, Card, CheckBox, ComboBox, Container, ContextStore, CurrentUser, DateInput, Dialog, ErrorBoundary, FieldLabel, FormControl, FormField, FormSchema, Fragment, HTMDElement, Image, LinkButton, List, Loader, Modal, NavigationEvent, NumberInput, PeoplePicker, RoleManager, Router, SP_ACCEPT_MINIMAL, SidePanel, SimpleElapsedTimeBenchmark, SiteApi, StyleResource, SystemError, TabGroup, Text, TextArea, TextInput, Toast, UserIdentity, View, ViewSwitcher, copyToClipboard, defineRoute, enforceStrictObject, escapeAttr, escapeHtml, fromFieldValue, generateRuntimeUID, generateUUIDv4, getFullUserDetails, getIcon, getUserProfile, pageReset, refreshRequestDigest, resolvePath, sanitizeQuery, searchUsers, spDELETE, spGET, spMERGE, spPOST, startDigestTimer, stopDigestTimer, toFieldValue };
+export type { AccordionGroupProps, AccordionItemProps, ButtonProps, CAMLCondition, CAMLOperator, CAMLOrderByField, CAMLQueryObject, CAMLQueryResponse, CAMLValueOperator, CardProps, CardVariants, ChildrenOptions, ComboBoxDataset, ComboBoxOptionProps, ComboBoxProps, ContainerProps, ContainerTags, ContextStoreEntry, CreateFieldOptions, CreateListOptions, DATE_FORMATS, DateInputProps, DialogProps, DialogVariants, ErrorBoundaryProps, ErrorOptions, FieldLabelPosition, FieldLabelProps, FormControlProps, FormFieldProps, FormFieldType, FragmentProps, FullUserDetails, GetItemsOptions, GetItemsPagedOptions, GroupHierarchyEntry, HTMDElementInterface, HTMDElementProps, HTMDNode, HTMDSingleNode, ImageProps, InitializeOptions, LinkButtonProps, ListApiOptions, ListProps, LoaderProps, ModalProps, NavigationGuardFn, NavigationOptions, NumberInputProps, PaginatedResult, PeoplePickerProps, PeopleSearchOptions, PeopleSearchResult, PeopleSearchResultData, PermissionMap, ProfileProperty, RouteConfig, RouteOptions, RoutePaths, RouterProps, RuntimeEventListenerOptions, RuntimeEventOptions, SPCollectionResponse, SPField, SPFieldValue, SPGroup, SPItemWithETag, SPList, SPRequestOptions, SPSimpleValue, SPUser, SPWeb, SidePanelProps, StyleResourceOptions, TabConfig, TabGroupProps, TextAreaProps, TextInputProps, TextProps, ToastLoadingController, ToastOptions, ToastPromiseMessages, ToastType, Unsubscribe, UserProfile, UserProfilePayload, ViewProps, ViewSwitcherProps, pageResetOptions };

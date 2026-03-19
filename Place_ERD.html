@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PLACE ERD -- PDCA Initiative Management</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --border: #0f3460;
+      --text: #e0e0e0;
+      --heading: #f5f5f5;
+      --accent: #e94560;
+      --accent2: #533483;
+      --table-header: #0f3460;
+      --table-row-alt: #1a1a3e;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem;
+    }
+
+    h1 {
+      color: var(--heading);
+      font-size: 1.8rem;
+      margin-bottom: 0.5rem;
+      border-bottom: 2px solid var(--accent);
+      padding-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #999;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    section h2 {
+      color: var(--heading);
+      font-size: 1.3rem;
+      margin-bottom: 0.3rem;
+    }
+
+    section p.desc {
+      color: #999;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+    }
+
+    .mermaid {
+      display: flex;
+      justify-content: center;
+      overflow-x: auto;
+      padding: 1rem 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead th {
+      background: var(--table-header);
+      color: var(--heading);
+      padding: 0.6rem 1rem;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    tbody td {
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tbody tr:nth-child(odd) { background: var(--table-row-alt); }
+
+    code {
+      background: #0d1b2a;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.85em;
+    }
+
+    .legend {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+      font-size: 0.8rem;
+      color: #999;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>PLACE ERD -- PDCA Initiative Management</h1>
+  <p class="subtitle">Entity Relationship Diagrams for the PLACE SharePoint application. All data lives in SharePoint Lists with text-only fields. Relationships are logical (string matching on UUID/email), not enforced foreign keys.</p>
+
+  <!-- ERD -->
+  <section>
+    <h2>Entity Relationship Diagram</h2>
+    <p class="desc">Six SharePoint Lists: UserRoles, Iniciativas, Collaborations, Comments, StatusLog, Notifications.</p>
+    <div class="mermaid">
+erDiagram
+    UserRoles {
+        string Title "PK - user email"
+        string DisplayName
+        string Team
+        json Roles "list of role strings"
+        json MentorTeams "teams user mentors"
+        json ValidatesTeams "teams user validates"
+        string ValidatesSavingsType "Soft or Hard"
+        string IsActive "true or false"
+    }
+
+    Iniciativas {
+        string UUID "PK - unique identifier"
+        string Code "PDCA-001 auto-generated"
+        string Title "initiative name"
+        note Description
+        note Problem
+        note Objective
+        string Status "workflow state (indexed)"
+        string Team "department (indexed)"
+        string SavingType "Sem saving or Hard or Soft"
+        string SavingsValue "estimated EUR"
+        string SavingValidated "approved EUR"
+        string SavingCategory "cost category"
+        string IsConfidential "true or false"
+        json Owner "UserIdentity JSON"
+        json Mentor "UserIdentity JSON"
+        json GestorValidator "UserIdentity JSON"
+        string SubmittedDate "ISO date"
+        string ImplementedDate "ISO date"
+        string CreatedDate "ISO date"
+        string ValidadoMentorDate "ISO date"
+        string ValidadoGestorDate "ISO date"
+        note ReviewReason
+        json ReviewRequestedBy "UserIdentity JSON"
+        note RejectionReason
+        note CancellationReason
+        note GestorValidationNote
+        note MentorValidationNote
+    }
+
+    Collaborations {
+        string UUID "PK"
+        string IniciativaUUID "FK to Iniciativas"
+        string IniciativaCode "denormalized ref"
+        json Collaborator "UserIdentity JSON"
+        json AddedBy "UserIdentity JSON"
+        string AddedDate "ISO date"
+        string Type "colaboracao or partilha or transferencia or pedido_parecer"
+        string Status "Aceite or Pendente or Rejeitado"
+        note Message
+    }
+
+    Comments {
+        string UUID "PK"
+        string IniciativaUUID "FK to Iniciativas"
+        string IniciativaCode "denormalized ref"
+        json Author "UserIdentity JSON"
+        note Body
+        string IsConfidential "true or false"
+        string CommentDate "ISO date"
+    }
+
+    StatusLog {
+        string UUID "PK"
+        string IniciativaUUID "FK to Iniciativas"
+        string IniciativaCode "denormalized ref"
+        string FromStatus "previous state"
+        string ToStatus "new state"
+        json Actor "UserIdentity JSON"
+        string Timestamp "ISO 8601"
+    }
+
+    Notifications {
+        string UUID "PK"
+        string IniciativaUUID "FK to Iniciativas"
+        string IniciativaCode "denormalized ref"
+        string Recipient "user email"
+        string Type "state_change or comment or collaboration"
+        string CreatedDate "ISO date"
+    }
+
+    UserRoles ||--o{ Iniciativas : "owns (Owner email)"
+    UserRoles ||--o{ Iniciativas : "mentors (Mentor email)"
+    UserRoles ||--o{ Iniciativas : "validates (Gestor email)"
+    Iniciativas ||--o{ Collaborations : "IniciativaUUID"
+    Iniciativas ||--o{ Comments : "IniciativaUUID"
+    Iniciativas ||--o{ StatusLog : "IniciativaUUID"
+    Iniciativas ||--o{ Notifications : "IniciativaUUID"
+    UserRoles ||--o{ Notifications : "Recipient = email"
+    UserRoles ||--o{ Collaborations : "Collaborator email"
+    UserRoles ||--o{ Comments : "Author email"
+    UserRoles ||--o{ StatusLog : "Actor email"
+    </div>
+  </section>
+
+  <!-- Status Workflow -->
+  <section>
+    <h2>Status Workflow</h2>
+    <p class="desc">PDCA initiative lifecycle from draft to implementation, rejection, or cancellation.</p>
+    <div class="mermaid">
+stateDiagram-v2
+    [*] --> Rascunho : Create
+    Rascunho --> Submetido : Submit (auto-assigns Mentor)
+
+    Submetido --> ValidadoMentor : Mentor approves
+    Submetido --> EmRevisao : Mentor requests review
+    Submetido --> Rejeitado : Mentor rejects
+
+    EmRevisao --> Submetido : Owner resubmits
+
+    ValidadoMentor --> EmExecucao : Start execution
+
+    EmExecucao --> PorValidar : Request savings validation
+    EmExecucao --> Cancelado : Owner cancels
+
+    PorValidar --> ValidadoGestor : Gestor approves savings
+    PorValidar --> EmRevisao : Gestor requests review
+    PorValidar --> Rejeitado : Gestor rejects
+
+    ValidadoGestor --> Implementado : Mark implemented
+
+    Implementado --> [*]
+    Rejeitado --> [*]
+    Cancelado --> [*]
+    </div>
+  </section>
+
+  <!-- Savings Routing -->
+  <section>
+    <h2>Savings Routing Rules</h2>
+    <p class="desc">How initiatives are routed to the correct Gestor for savings validation based on type and value.</p>
+    <div class="mermaid">
+flowchart TD
+    A["Initiative submitted for savings validation"] --> B{"Saving Type?"}
+    B -->|"Sem saving"| C["No savings validation needed"]
+    B -->|"Soft Saving"| D{"Value >= 10k EUR?"}
+    B -->|"Hard Saving"| F["Route to Gestor RF - Financial"]
+    D -->|"No"| E["Route to Gestor RD - Department Head"]
+    D -->|"Yes"| F
+    E --> G["GESTOR_MAP by Team"]
+    F --> H["Financial validator"]
+    G --> I["Team-specific gestor validates"]
+    H --> I
+    </div>
+  </section>
+
+  <!-- Relationship Summary Table -->
+  <section>
+    <h2>Relationship Summary</h2>
+    <p class="desc">All relationships are logical -- SharePoint has no referential integrity constraints. UUIDs and email addresses serve as join keys.</p>
+    <table>
+      <thead>
+        <tr>
+          <th>Parent</th>
+          <th>Child</th>
+          <th>Link Field</th>
+          <th>Cardinality</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Iniciativas</td>
+          <td>Collaborations</td>
+          <td><code>IniciativaUUID</code></td>
+          <td>1:N</td>
+        </tr>
+        <tr>
+          <td>Iniciativas</td>
+          <td>Comments</td>
+          <td><code>IniciativaUUID</code></td>
+          <td>1:N</td>
+        </tr>
+        <tr>
+          <td>Iniciativas</td>
+          <td>StatusLog</td>
+          <td><code>IniciativaUUID</code></td>
+          <td>1:N</td>
+        </tr>
+        <tr>
+          <td>Iniciativas</td>
+          <td>Notifications</td>
+          <td><code>IniciativaUUID</code></td>
+          <td>1:N</td>
+        </tr>
+        <tr>
+          <td>UserRoles</td>
+          <td>Iniciativas.Owner</td>
+          <td>email match</td>
+          <td>1:N</td>
+        </tr>
+        <tr>
+          <td>UserRoles</td>
+          <td>Iniciativas.Mentor</td>
+          <td>email match</td>
+          <td>1:N</td>
+        </tr>
+        <tr>
+          <td>UserRoles</td>
+          <td>Iniciativas.GestorValidator</td>
+          <td>email match</td>
+          <td>1:N</td>
+        </tr>
+        <tr>
+          <td>UserRoles</td>
+          <td>Notifications.Recipient</td>
+          <td>email match</td>
+          <td>1:N</td>
+        </tr>
+        <tr>
+          <td>UserRoles</td>
+          <td>Collaborations.Collaborator</td>
+          <td>email match</td>
+          <td>1:N</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="legend">
+      <span><strong>PK</strong> = Primary Key (UUID or email)</span>
+      <span><strong>FK</strong> = Foreign Key (logical, not enforced)</span>
+      <span><strong>json</strong> = JSON-serialized object in a Text/Note field</span>
+      <span><strong>note</strong> = Multi-line text field (richText: false)</span>
+    </div>
+  </section>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        darkMode: true,
+        background: '#16213e',
+        primaryColor: '#533483',
+        primaryTextColor: '#e0e0e0',
+        primaryBorderColor: '#0f3460',
+        lineColor: '#e94560',
+        secondaryColor: '#0f3460',
+        tertiaryColor: '#1a1a2e',
+      },
+      er: { useMaxWidth: true, layoutDirection: 'TB' },
+      flowchart: { useMaxWidth: true, curve: 'basis' },
+      stateDiagram: { useMaxWidth: true },
+    });
+  </script>
+</body>
+</html>

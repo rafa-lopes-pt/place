@@ -4,6 +4,27 @@ Reference guide for AI assistants working with the SPARC framework. Source code 
 
 ---
 
+## Table of Contents
+
+| # | Section | Lines | What's Here |
+|---|---------|-------|-------------|
+| 1 | Architecture Overview | 28-84 | Setup, environment constraints, high-level flow |
+| 2 | Component System | 86-485 | All components, props, lifecycle, SidePanel, selection guide |
+| 3 | Routing System | 487-594 | Router, defineRoute, navigation guards |
+| 4 | State Management | 596-810 | FormField, FormSchema, ContextStore, subscribers |
+| 5 | Building Components | 812-879 | Custom component authoring |
+| 6 | SharePoint Integration | 881-1413 | ListApi, SiteApi, CurrentUser, RoleManager, UserIdentity, People API, CAML |
+| 7 | Styling & CSS | 1415-1465 | SCSS tokens, BEM classes, theming |
+| 8 | Utilities & Helpers | 1467-1562 | Bundled deps, escapeHtml, resolvePath |
+| 9 | Common Patterns | 1564-1839 | Search/filter, data tables, CRUD, bulk ops, role-based UI, cascading dropdowns, polling |
+| 10 | Quick Reference | 1841-2297 | Copy-paste patterns, async validators, nav guards, concurrency, common mistakes |
+| 11 | Anti-Patterns | 2299-2523 | What NOT to do -- with correct alternatives |
+| 12 | File Organization | 2525-2553 | Naming conventions |
+| 13 | Development & Deployment | 2555-2594 | Build commands, deployment |
+| 14 | Glossary | 2596-2615 | Term definitions |
+
+Use `Read` with `offset` and `limit` to jump directly to the section you need.
+
 ## 1. Architecture Overview
 
 ### What is SPARC?
@@ -71,7 +92,7 @@ HTMDElementInterface (interface)
     |
 HTMDElement (abstract base class)
     |
-    +-- Container Components: Container, Card, View, Modal
+    +-- Container Components: Container, Card, View, Modal, SidePanel
     +-- Form Components: TextInput, TextArea, NumberInput, DateInput, ComboBox, PeoplePicker, CheckBox, FieldLabel
     +-- Navigation: Button, LinkButton, TabGroup, ViewSwitcher, AccordionGroup, AccordionItem
     +-- Display: Text, List, Image, Icon
@@ -87,7 +108,7 @@ Special cases:
 | Category | Components |
 |----------|-----------|
 | Form | TextInput, TextArea, NumberInput, DateInput, ComboBox, PeoplePicker, CheckBox, FieldLabel |
-| Container | Container, Card, View, Modal, Fragment |
+| Container | Container, Card, View, Modal, SidePanel, Fragment |
 | Navigation | Button, LinkButton, TabGroup, ViewSwitcher, AccordionGroup, AccordionItem |
 | Display | Text, List, Image, Icon |
 | Feedback | Toast (static methods), Dialog, Loader, ErrorBoundary |
@@ -196,6 +217,7 @@ Use SPARC components for ALL UI. Never create raw HTML elements.
 | Show/hide sections | `View` (`.show()`/`.hide()`) | jQuery `.show()`/`.hide()` |
 | Switch between views | `ViewSwitcher` | Manual view toggling |
 | User reference in list field | `UserIdentity` | Raw email strings, `PeopleSearchResult` extraction |
+| Side panel / drawer | `SidePanel` | Custom positioned overlay |
 | Modal / overlay | `Modal` or `Dialog` | Custom overlay + backdrop |
 | Confirmation dialog | `Dialog` with `variant: 'warning'` | Custom modal with buttons |
 | Notification toast | `Toast.success/error/info/warning` | Custom notification div |
@@ -248,6 +270,34 @@ dialog.close()    // hides (inherited from Modal)
 ```
 
 Variant behavior: `'error'` shows a warning icon in the header. `'info'` and `'warning'` show no icon.
+
+#### SidePanel -- extends Modal, slides from right
+
+```javascript
+const panel = new SidePanel({
+  title: 'Details',                        // required -- header text
+  content: [new Text('Panel body')],       // required -- scrollable content area
+  footer: [saveBtn, cancelBtn],            // optional -- fixed footer
+  width: '500px',                          // CSS width (default: '400px')
+  backdrop: true,                          // inherited from Modal (default: true)
+  closeOnFocusLoss: true,                  // inherited from Modal (default: true)
+})
+
+panel.render()       // attaches to #root (hidden)
+panel.open()         // slides in from right
+panel.close()        // slides out
+panel.title = 'New Title'   // live setter -- updates DOM instantly
+panel.width = '600px'       // live setter -- updates DOM instantly
+```
+
+**When to use SidePanel vs Modal vs Dialog:**
+
+| | SidePanel | Modal | Dialog |
+|---|---|---|---|
+| Position | Right edge, slides in | Centered overlay | Centered overlay |
+| Content | Detail view, forms, settings | Any content | Structured (title/content/footer) |
+| Scroll | Content area scrolls independently | Caller manages | Content area scrolls |
+| Use case | Side-by-side context (list + detail) | Custom overlays | Confirmations, alerts |
 
 #### View -- animated show/hide
 
@@ -365,6 +415,72 @@ const label = new FieldLabel('Email Address', formControl, {
 ```
 
 Setters available: `.label`, `.position`, `.tooltip`. CheckBox defaults to `position: 'left'`.
+
+#### Button -- variants and modifiers
+
+```javascript
+const btn = new Button('Save', {
+  variant: 'primary',           // 'primary' | 'secondary' | 'danger' (default: 'primary')
+  isOutlined: false,            // outlined styling variant (default: false)
+  squared: false,               // equal width/height for icon buttons (default: false)
+  type: 'button',              // HTML type: 'button' | 'submit' | 'reset' (default: 'button')
+  onClickHandler: () => {},    // required
+})
+
+btn.isLoading = true           // disables button + loading CSS class
+btn.isDisabled = true          // disables button (inherited from FormControl)
+```
+
+#### TextInput -- additional props
+
+```javascript
+const input = new TextInput(formField, {
+  placeholder: 'Enter...',     // placeholder text
+  debounceMs: 300,             // sync delay in ms (default: 300)
+  hideChars: false,            // mask input like password field (default: false)
+  spellcheck: false,           // HTML spellcheck attribute (default: false)
+  autocomplete: false,         // HTML autocomplete attribute (default: false)
+})
+```
+
+#### ComboBox -- full props
+
+```javascript
+const combo = new ComboBox(formField, dataset, {
+  allowMultiple: false,        // multi-select mode (default: false)
+  allowFiltering: true,        // enable search filtering (default: true)
+  allowCreate: false,          // allow typing new options (default: false)
+  placeholder: 'Select...',   // input placeholder (default: 'Select...')
+  clearText: 'Clear...',      // clear button text (default: 'Clear...')
+  returnFullDataset: false,    // return all options with checked flags (default: false)
+  onSelectHandler: (sel) => {},  // callback on option toggle
+  filteringFunction: (search) => filteredOptions,  // custom filter (replaces Fuse.js)
+})
+
+combo.dataset = newOptions     // setter -- updates dropdown options
+```
+
+#### Container -- semantic tags and selectable items
+
+```javascript
+const section = new Container(children, {
+  as: 'section',              // 'div'|'span'|'header'|'main'|'footer'|'section'|'article'|'nav' (default: 'div')
+  selectableItems: false,     // enables item selection behavior (default: false)
+})
+```
+
+#### List -- typed data table
+
+```javascript
+const list = new List({
+  headers: ['Name', 'Status', 'Date'],   // column headers
+  data: [['Project A', 'Active', '2024-01-01']],  // T[][] where T extends string | number
+  emptyListMessage: 'No items to display',  // shown when data is empty
+  onItemSelectHandler: (rowData) => {},     // callback when row is clicked
+})
+
+list.data = newData            // setter -- updates table rows
+```
 
 ---
 
@@ -821,7 +937,7 @@ const api = siteApi.list('Projects')
 **Get items** -- accepts `CAMLQueryObject` or raw CAML XML string. `CAMLQueryObject` supports all comparison operators and OR logic. String values default to `Eq`; use `{ value, operator }` for explicit operators; use `{ value: [...], operator: 'Or', match? }` for same-field multi-value OR; use `$or: [...]` for cross-field OR. Field conditions are AND-ed together. Automatically paginates in 500-item pages:
 
 ```javascript
-// All items (default limit: 1000)
+// All items (no limit by default)
 const items = await api.getItems()
 
 // Filtered by field values (CAML query object -- NOT REST filter syntax)
@@ -849,7 +965,25 @@ const custom = await api.getItems('<View><Query><Where>...</Where></Query></View
 // Control pagination limit
 const all = await api.getItems({}, { limit: Infinity })   // fetch everything
 const top50 = await api.getItems({}, { limit: 50 })       // stop after 50
+```
 
+**Sorting and field selection** -- `orderBy` sorts via CAML `<OrderBy>`, `viewFields` restricts returned columns:
+
+```javascript
+const sorted = await api.getItems({ Status: 'Active' }, {
+  orderBy: [{ field: 'Created', ascending: false }]
+})
+const slim = await api.getItems({}, {
+  viewFields: ['Title', 'Status', 'Created']
+})
+const combined = await api.getItems({ Status: 'Active' }, {
+  limit: 100,
+  orderBy: [{ field: 'Created', ascending: false }],
+  viewFields: ['Title', 'Status', 'DueDate']
+})
+```
+
+```javascript
 // Convenience methods
 const byTitle = await api.getItemByTitle('My Project')
 const byUUID = await api.getItemByUUID('550e8400-e29b-41d4-a716-446655440000')
@@ -909,6 +1043,30 @@ await api.setFieldIndexed('Title', true)                                   // to
 ```
 
 All ListApi operations are **async** (return Promises).
+
+**Query sanitization** -- `sanitizeQuery()` strips null/undefined entries from a query object, making it safe to build queries from optional filter values. Returns a clean `CAMLQueryObject` or `undefined` if nothing remains:
+
+```javascript
+// Filter form pattern -- optional form inputs
+const query = sanitizeQuery({
+  Status: statusFilter.value || null,
+  Department: deptFilter.value || null,
+  Priority: selectedPriorities.length > 0
+    ? { value: selectedPriorities, operator: 'Or' }
+    : null,
+})
+const items = await api.getItems(query)
+
+// Lookup-chain pattern -- IDs from a prior query
+const projectIds = listAItems.map(i => i.ProjectId)
+const query = sanitizeQuery({
+  ProjectId: projectIds.length > 0
+    ? { value: projectIds, operator: 'Or' }
+    : null,
+  Status: activeOnly ? 'Active' : null,
+})
+const results = await api.getItems(query)
+```
 
 ### 6.3.1 Field Value Serialization
 
@@ -1008,7 +1166,58 @@ const user = await new CurrentUser().initialize(hierarchy, { targetUser: 'John D
 
 **Error recovery:** if `initialize()` fails, the singleton reference is cleared so that a subsequent `new CurrentUser()` creates a fresh instance and `initialize()` can be retried.
 
-### 6.5 UserIdentity
+### 6.5 RoleManager
+
+Source: `src/base/sharepoint/user/RoleManager.class.ts`
+
+List-based authorization for custom role checks. Unlike `CurrentUser` (singleton, SP-group-based), RoleManager is NOT a singleton -- different apps can use different lists or maintain multiple instances.
+
+**List structure:** A SharePoint list (default: `'UserRoles'`) with:
+- `Title` field = user's email address (lookup key)
+- `Roles` field = JSON-serialized `string[]` (auto-parsed by ListApi)
+
+**Constructor and loading:**
+```javascript
+const roles = new RoleManager()
+await roles.load()                 // queries 'UserRoles' list by current user's email
+await roles.load('AppRoles')       // or specify a different list name
+```
+
+If no matching item is found, the instance has zero roles (valid state, no error).
+
+**Role checks:**
+```javascript
+roles.hasRole('editor')                    // exact match
+roles.hasAnyRole(['admin', 'editor'])      // true if user has either
+roles.hasAnyRole(['*'])                    // wildcard -- always true
+```
+
+**Permission map -- resource-level access:**
+```javascript
+const permissions = {
+  dashboard: ['*'],                    // everyone
+  reports:   ['admin', 'analyst'],     // admin or analyst
+  settings:  ['admin'],                // admin only
+}
+
+roles.canAccess('reports', permissions)   // true if user has 'admin' or 'analyst'
+roles.canAccess('unknown', permissions)   // false (key not in map)
+```
+
+**Getters:**
+- `roles.roles` -- shallow copy of the loaded roles array
+- `roles.isLoaded` -- distinguishes "not yet loaded" from "loaded with zero roles"
+
+**RoleManager vs CurrentUser groups:**
+
+| | CurrentUser | RoleManager |
+|---|---|---|
+| Source | SharePoint groups (AD-backed) | Custom SP list |
+| Granularity | Hierarchy labels (ADMIN/MEMBER/VISITOR) | Arbitrary role strings |
+| Singleton | Yes | No |
+| Use case | Coarse access tiers, route protection | Fine-grained permissions, feature flags |
+
+### 6.6 UserIdentity
 
 Source: `src/base/sharepoint/user/UserIdentity.class.ts`
 
@@ -1059,7 +1268,7 @@ identity.details                    // FullUserDetails | null
 
 **String coercion:** `identity.toString()` returns the display name.
 
-### 6.6 People API
+### 6.7 People API
 
 Source: `src/base/sharepoint/api/people.api.ts`
 
@@ -1082,7 +1291,7 @@ Login name resolution: plain `DOMAIN\user` strings are automatically resolved to
 
 **PeoplePicker pre-population:** Use `peoplePicker.resolveUser(identifier)` to programmatically resolve and select a user by email, display name, or employee ID. Returns the matched `PeopleSearchResult` or `null`.
 
-### 6.7 HTTP Layer
+### 6.8 HTTP Layer
 
 Source: `src/base/sharepoint/api/httpRequests.ts`
 
@@ -1104,7 +1313,7 @@ Key behaviors:
 
 Most work should go through SiteApi and ListApi. Use the HTTP functions directly only for SharePoint REST endpoints those classes don't cover.
 
-### 6.8 Data Modeling Principles
+### 6.9 Data Modeling Principles
 
 SharePoint lists are NoSQL-style document stores. SPARC enforces a strict data modeling approach:
 
@@ -1136,7 +1345,7 @@ const statusField = new FormField({
 })
 ```
 
-### 6.9 Large Lists & Indexing
+### 6.10 Large Lists & Indexing
 
 SharePoint's list view threshold is 5,000 items. SPARC handles this through pagination and indexing:
 
@@ -1159,7 +1368,7 @@ await api.setFieldIndexed('Title', true)
 
 Indexing is a design-time concern -- plan which columns need indexing upfront based on expected query patterns and data volume.
 
-### 6.10 Permission-Based Routing
+### 6.11 Permission-Based Routing
 
 Use `CurrentUser` with group hierarchy to conditionally register routes:
 
@@ -1511,6 +1720,122 @@ if (user.accessLevel === 'ADMIN') {
 new Router(routes)
 ```
 
+### Bulk Operations
+
+Multi-select items for batch delete/update with progress feedback:
+
+```javascript
+const selectedIds = new FormField({ value: [] })
+
+const handleBulkDelete = async () => {
+  const ids = selectedIds.value
+  if (!ids.length) return
+
+  bulkDeleteBtn.isLoading = true
+  const loading = Toast.loading(`Deleting ${ids.length} items...`)
+  const failed = []
+
+  for (const id of ids) {
+    try {
+      const item = items.find(i => i.ID === id)
+      await api.deleteItem(id, item['odata.etag'])
+    } catch {
+      failed.push(id)
+    }
+  }
+
+  if (failed.length) {
+    loading.error(`${failed.length} items failed to delete`)
+    selectedIds.value = failed  // keep failed items selected
+  } else {
+    loading.success('All items deleted')
+    selectedIds.value = []
+  }
+  bulkDeleteBtn.isLoading = false
+}
+```
+
+### Role-Based UI
+
+Conditionally render UI elements based on user permissions:
+
+```javascript
+// Using CurrentUser group hierarchy
+const user = await new CurrentUser().initialize(groupHierarchy)
+const isAdmin = user.accessLevel === 'ADMIN'
+
+const adminControls = isAdmin
+  ? [new Button('Manage Users', { onClickHandler: handleManage })]
+  : []
+
+// Using RoleManager for fine-grained control
+const roles = new RoleManager()
+await roles.load()
+
+const permissions = {
+  editProject: ['admin', 'manager'],
+  deleteProject: ['admin'],
+  viewReports: ['*'],
+}
+
+const actions = []
+if (roles.canAccess('editProject', permissions)) {
+  actions.push(new Button('Edit', { onClickHandler: handleEdit }))
+}
+if (roles.canAccess('deleteProject', permissions)) {
+  actions.push(new Button('Delete', { variant: 'danger', onClickHandler: handleDelete }))
+}
+```
+
+### Cascading Dropdowns
+
+ComboBox #1 subscriber drives ComboBox #2 options via the `dataset` setter:
+
+```javascript
+const categoryField = new FormField({ value: '' })
+const subcategoryField = new FormField({ value: '' })
+
+const subcategoryCombo = new ComboBox(subcategoryField, [], { placeholder: 'Select subcategory...' })
+
+categoryField.subscribe((category) => {
+  subcategoryField.value = ''  // reset dependent field
+  subcategoryCombo.dataset = subcategories[category] || []
+})
+
+const categoryCombo = new ComboBox(categoryField, categories, { placeholder: 'Select category...' })
+```
+
+### Polling / Auto-Refresh
+
+Periodically refresh data with `isAlive` guard for safe cleanup on navigation:
+
+```javascript
+export default defineRoute((config) => {
+  config.setRouteTitle('Live Dashboard')
+  const container = new Container([new Loader([], {})])
+
+  const refresh = async () => {
+    if (!container.isAlive) {
+      clearInterval(intervalId)  // route was navigated away -- stop polling
+      return
+    }
+    try {
+      const items = await api.getItems({ Status: 'Active' })
+      container.children = items.map(renderItem)
+    } catch {
+      // Backoff: skip this cycle, next interval will retry
+    }
+  }
+
+  refresh()  // initial load
+  const intervalId = setInterval(refresh, 30000)  // 30s refresh
+
+  return [container]
+})
+```
+
+The `isAlive` check guards against DOM operations on a removed component. When the Router navigates away, the container is removed from the DOM and `isAlive` becomes `false`, causing the next interval tick to self-clear.
+
 ---
 
 ## 10. App Developer Quick Reference
@@ -1834,6 +2159,139 @@ const nextButton = new Button('Next', {
 const prevButton = new Button('Back', {
   onClickHandler: () => wizard.previous(),
 });
+```
+
+### Form Submission with Async Validators
+
+When a form has async validators (e.g., server-side uniqueness checks), use `validateAllAsync()` instead of `schema.isValid`:
+
+```javascript
+const handleSubmit = async () => {
+  submitButton.isLoading = true;
+  const valid = await schema.validateAllAsync();
+  if (!valid) {
+    schema.focusOnFirstInvalid();
+    Toast.error('Please fix the highlighted fields');
+    submitButton.isLoading = false;
+    return;
+  }
+
+  const loading = Toast.loading('Saving...');
+  try {
+    await listApi.createItem(schema.parse());
+    loading.success('Saved successfully');
+  } catch (error) {
+    loading.error('Failed to save');
+  } finally {
+    submitButton.isLoading = false;
+  }
+};
+```
+
+Key differences from the sync flow:
+- `isLoading = true` BEFORE validation (async validation may be slow)
+- `await schema.validateAllAsync()` replaces `schema.isValid`
+- All field validators (sync and async) run in parallel via `Promise.all`
+- Fields without validators pass automatically (null !== false)
+- Use `schema.isValidating` or `field.isValidating` to show loading indicators
+
+### Navigation Guards in Practice
+
+Every route with editable forms should set a navigation guard to prevent data loss:
+
+```javascript
+export default defineRoute((config) => {
+  config.setRouteTitle('Edit Project');
+
+  const schema = new FormSchema({
+    title: new FormField({ value: existingProject.Title }),
+    status: new FormField({ value: existingProject.Status }),
+  });
+
+  // Guard checks dirty state on every navigation attempt
+  Router.setNavigationGuard(() => {
+    if (!schema.isDirty) return true;
+    return 'You have unsaved changes. Leave this page?';
+  });
+
+  const handleSave = async () => {
+    // ... validation, isLoading, try/catch ...
+    try {
+      await listApi.updateItem(id, schema.parse(), etag);
+      Router.clearNavigationGuard();  // clear BEFORE navigating away
+      Router.navigateTo('projects');
+    } catch (error) {
+      // ... error handling ...
+    }
+  };
+
+  return [/* form components */];
+});
+```
+
+Guard key points:
+- Set guard ONCE per route, not inside event handlers
+- The guard function is called fresh on each navigation -- captures current state via closure
+- Clear the guard BEFORE programmatic navigation after a successful save
+- `Router.unauthorized()` bypasses guards (terminal redirect)
+- Do NOT manually manage `beforeunload` -- the Router handles it automatically
+
+### Concurrency Conflict Handling
+
+Write operations (`updateItem`, `deleteItem`) require the item's `odata.etag`. If the item was modified since the etag was obtained, SharePoint returns HTTP 412 and SPARC throws `SystemError('ConcurrencyConflict', ..., { breaksFlow: false })`.
+
+Uncaught: ConcurrencyConflict is non-breaking, so ErrorBoundary auto-shows `Toast.error` (no BreakingErrorDialog).
+
+Explicit catch (preferred for forms with retry):
+
+```javascript
+try {
+  await listApi.updateItem(currentItem.ID, schema.parse(), currentItem['odata.etag']);
+  loading.success('Saved successfully');
+} catch (error) {
+  if (error.name === 'ConcurrencyConflict') {
+    loading.error('This record was modified by another user.');
+    const [refreshed] = await listApi.getItemByUUID(currentItem.UUID);
+    currentItem = refreshed;
+  } else {
+    loading.error('Failed to save');
+  }
+}
+```
+
+### Common Async Mistakes
+
+**Bare async handler (no safety):**
+```javascript
+// WRONG -- no try/catch, no isLoading, no feedback
+const handleSave = async () => {
+  await listApi.createItem(schema.parse());
+  Router.navigateTo('projects');
+};
+
+// CORRECT -- all three requirements met
+const handleSave = async () => {
+  if (!schema.isValid) { schema.focusOnFirstInvalid(); Toast.error('Fix fields'); return; }
+  submitButton.isLoading = true;
+  const loading = Toast.loading('Saving...');
+  try {
+    await listApi.createItem(schema.parse());
+    loading.success('Saved');
+    Router.navigateTo('projects');
+  } catch { loading.error('Failed to save'); }
+  finally { submitButton.isLoading = false; }
+};
+```
+
+**Manual input sync on auto-syncing components:**
+```javascript
+// WRONG -- TextInput already auto-syncs with its FormField
+searchInput.setEventHandler('input', (e) => {
+  searchField.value = e.target.value;  // redundant, causes double-triggering
+});
+
+// CORRECT -- rely on TextInput's built-in debounced sync (default 300ms)
+const searchInput = new TextInput(searchField, { placeholder: 'Search...' });
 ```
 
 ---

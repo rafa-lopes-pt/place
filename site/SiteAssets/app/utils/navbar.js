@@ -1,10 +1,13 @@
 import { Container, Text, Button, LinkButton, ContextStore, Toast } from '../libs/nofbiz/nofbiz.base.js';
 import { openNewInitiativeModal } from './new-initiative.js';
 
+const HEADER_ROUTES = ['instrucoes'];
+
 const TAB_LABELS = {
   inicio: 'Inicio',
   instrucoes: 'Instrucoes',
   pessoal: 'Pessoal',
+  departamento: 'Departamento',
   mentoria: 'Mentoria',
   gestor: 'Gestor',
   catalogo: 'Catalogo',
@@ -32,6 +35,7 @@ function createHeader() {
           });
         },
       }),
+      new LinkButton('Ajuda', 'instrucoes', { class: 'pace-header__info-btn' }),
       new Container([
         new Text(displayName, { type: 'span', class: 'pace-header__user-name' }),
         new Text(role, { type: 'span', class: 'pace-header__user-role' }),
@@ -42,10 +46,10 @@ function createHeader() {
 
 function createTabBar() {
   const routes = ContextStore.get('routes');
-  const allTabs = ['inicio', ...routes];
+  const allTabs = ['inicio', ...routes].filter((key) => !HEADER_ROUTES.includes(key));
 
   const tabLinks = allTabs.map((key) => {
-    const path = key === 'inicio' ? '' : key;
+const path = key === 'inicio' ? '/' : key;
     return new LinkButton(TAB_LABELS[key], path, {
       class: `pace-tabs__tab pace-tab-${key}`,
     });
@@ -56,5 +60,9 @@ function createTabBar() {
 
 export function createPageLayout(content) {
   const items = Array.isArray(content) ? content : [content];
-  return [createHeader(), createTabBar(), ...items];
+  return [
+    createHeader(),
+    createTabBar(),
+    new Container(items, { as: 'main', class: 'pace-content' }),
+  ];
 }

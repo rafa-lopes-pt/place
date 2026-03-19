@@ -2070,6 +2070,11 @@ typeof SuppressedError === "function" ? SuppressedError : function(error, suppre
 };
 
 function toFieldValue(value) {
+    if (value === null || value === undefined) {
+        throw new SystemError("FieldValue", `Cannot serialize ${value === null ? "null" : "undefined"} to a SharePoint field value`, {
+            breaksFlow: true
+        });
+    }
     if (typeof value === "string") return value;
     if (typeof value === "number" || typeof value === "boolean") return String(value);
     return JSON.stringify(value);
@@ -2199,6 +2204,50 @@ class ListApi {
         __classPrivateFieldSet(this, _ListApi_title, title, "f");
         __classPrivateFieldSet(this, _ListApi_listItemType, options.listItemType ?? `SP.Data.${title.charAt(0).toUpperCase()}${title.substring(1)}ListItem`, "f");
     }
+    _validateAndSerializeFields(method, fields) {
+        if (fields == null || typeof fields !== "object" || Array.isArray(fields)) {
+            throw new SystemError("ListApi", `${method}: expected a fields object, received ${fields === null ? "null" : Array.isArray(fields) ? "array" : typeof fields}`, {
+                breaksFlow: true
+            });
+        }
+        const keys = Object.keys(fields);
+        if (keys.length === 0) {
+            throw new SystemError("ListApi", `${method}: fields object is empty -- at least one field is required`, {
+                breaksFlow: true
+            });
+        }
+        const serialized = {};
+        for (const [key, value] of Object.entries(fields)) {
+            if (value === undefined || value === null) {
+                throw new SystemError("ListApi", `${method}: field '${key}' is ${value === null ? "null" : "undefined"} -- remove the field or provide a valid value`, {
+                    breaksFlow: true
+                });
+            }
+            serialized[key] = toFieldValue(value);
+        }
+        return serialized;
+    }
+    _validateItemId(id) {
+        if (typeof id !== "number" || !Number.isInteger(id) || id < 1) {
+            throw new SystemError("ListApi", `Expected a positive integer item ID, received ${JSON.stringify(id)}`, {
+                breaksFlow: true
+            });
+        }
+    }
+    _validateETag(etag) {
+        if (typeof etag !== "string" || etag === "") {
+            throw new SystemError("ListApi", `Expected a non-empty ETag string, received ${JSON.stringify(etag)}`, {
+                breaksFlow: true
+            });
+        }
+    }
+    _validateNonEmptyString(method, paramName, value) {
+        if (typeof value !== "string" || value.trim() === "") {
+            throw new SystemError("ListApi", `${method}: ${paramName} must be a non-empty string, received ${JSON.stringify(value)}`, {
+                breaksFlow: true
+            });
+        }
+    }
     _buildAndClause(clauses) {
         let result = clauses[0];
         for (let i = 1; i < clauses.length; i++) {
@@ -2213,9 +2262,78 @@ class ListApi {
         }
         return result;
     }
+    _validateQueryObject(query, depth) {
+        if (depth > MAX_NESTING_DEPTH) {
+            throw new SystemError("CAMLQuery", `$or nesting depth exceeds maximum of ${MAX_NESTING_DEPTH}`, {
+                breaksFlow: true
+            });
+        }
+        if (query === null || query === undefined || typeof query !== "object" || Array.isArray(query)) {
+            throw new SystemError("CAMLQuery", `Expected a query object, received ${query === null ? "null" : Array.isArray(query) ? "array" : typeof query}`, {
+                breaksFlow: true
+            });
+        }
+        const obj = query;
+        const {$or: $or, ...fieldEntries} = obj;
+        const fieldKeys = Object.keys(fieldEntries);
+        if (fieldKeys.length === 0 && $or === undefined) {
+            throw new SystemError("CAMLQuery", "Empty query object -- use getItems() with no arguments to fetch all items", {
+                breaksFlow: true
+            });
+        }
+        if ($or !== undefined) {
+            if (!Array.isArray($or) || $or.length === 0) {
+                throw new SystemError("CAMLQuery", "$or must be a non-empty array of query objects", {
+                    breaksFlow: true
+                });
+            }
+            for (const sub of $or) {
+                this._validateQueryObject(sub, depth + 1);
+            }
+        }
+        for (const fieldName of fieldKeys) {
+            this._validateCondition(fieldName, fieldEntries[fieldName]);
+        }
+    }
+    _validateCondition(fieldName, condition) {
+        if (condition === undefined || condition === null) {
+            throw new SystemError("CAMLQuery", `Field '${fieldName}' has ${condition === null ? "null" : "undefined"} value -- remove the field or provide a valid condition`, {
+                breaksFlow: true
+            });
+        }
+        if (typeof condition === "string") return;
+        if (typeof condition !== "object" || Array.isArray(condition)) {
+            throw new SystemError("CAMLQuery", `Field '${fieldName}' has invalid condition type: ${Array.isArray(condition) ? "array" : typeof condition}`, {
+                breaksFlow: true
+            });
+        }
+        const obj = condition;
+        const {operator: operator, value: value} = obj;
+        if (operator === "IsNull" || operator === "IsNotNull") return;
+        if (operator === "Or") {
+            if (!Array.isArray(value) || value.length === 0) {
+                throw new SystemError("CAMLQuery", `Field '${fieldName}' with operator 'Or' requires a non-empty array of values`, {
+                    breaksFlow: true
+                });
+            }
+            for (let i = 0; i < value.length; i++) {
+                if (value[i] === undefined || value[i] === null) {
+                    throw new SystemError("CAMLQuery", `Field '${fieldName}' Or values[${i}] is ${value[i] === null ? "null" : "undefined"}`, {
+                        breaksFlow: true
+                    });
+                }
+            }
+            return;
+        }
+        if (value === undefined || value === null) {
+            throw new SystemError("CAMLQuery", `Field '${fieldName}' with operator '${operator}' has ${value === null ? "null" : "undefined"} value`, {
+                breaksFlow: true
+            });
+        }
+    }
     _parseCondition(fieldName, condition) {
         if (typeof condition === "string") {
-            return `<Eq><FieldRef Name="${fieldName}" /><Value Type="Text">${condition}</Value></Eq>`;
+            return `<Eq><FieldRef Name="${fieldName}" /><Value Type="Text">${escapeHtml(condition)}</Value></Eq>`;
         }
         const {operator: operator} = condition;
         if (operator === "IsNull" || operator === "IsNotNull") {
@@ -2223,10 +2341,10 @@ class ListApi {
         }
         if (operator === "Or") {
             const matchOp = condition.match ?? "Eq";
-            const perValue = condition.value.map(v => `<${matchOp}><FieldRef Name="${fieldName}" /><Value Type="Text">${v}</Value></${matchOp}>`);
+            const perValue = condition.value.map(v => `<${matchOp}><FieldRef Name="${fieldName}" /><Value Type="Text">${escapeHtml(v)}</Value></${matchOp}>`);
             return perValue.length === 1 ? perValue[0] : this._buildOrClause(perValue);
         }
-        return `<${operator}><FieldRef Name="${fieldName}" /><Value Type="Text">${condition.value}</Value></${operator}>`;
+        return `<${operator}><FieldRef Name="${fieldName}" /><Value Type="Text">${escapeHtml(String(condition.value))}</Value></${operator}>`;
     }
     _buildWhereContent(args, depth) {
         if (depth > MAX_NESTING_DEPTH) {
@@ -2250,13 +2368,36 @@ class ListApi {
         if (fieldClause && orClause) return `<And>${fieldClause}${orClause}</And>`;
         return fieldClause ?? orClause;
     }
-    _parseCAMLQueryObject(args) {
-        const rowLimit = `<RowLimit Paged="TRUE">${CAML_PAGE_SIZE}</RowLimit>`;
-        const whereContent = this._buildWhereContent(args, 0);
-        if (!whereContent) {
-            return `<View><Query></Query>${rowLimit}</View>`;
+    _buildViewXml(whereContent, options = {}, rowLimit) {
+        const parts = [ "<View>" ];
+        if (options.viewFields && options.viewFields.length > 0) {
+            const fieldRefs = options.viewFields.map(f => `<FieldRef Name="${f}" />`).join("");
+            parts.push(`<ViewFields>${fieldRefs}</ViewFields>`);
         }
-        return `<View><Query><Where>${whereContent}</Where></Query>${rowLimit}</View>`;
+        const hasWhere = whereContent !== null;
+        const hasOrderBy = options.orderBy && options.orderBy.length > 0;
+        if (hasWhere || hasOrderBy) {
+            parts.push("<Query>");
+            if (hasWhere) {
+                parts.push(`<Where>${whereContent}</Where>`);
+            }
+            if (hasOrderBy) {
+                const orderRefs = options.orderBy.map(o => {
+                    const asc = o.ascending !== false ? "TRUE" : "FALSE";
+                    return `<FieldRef Name="${o.field}" Ascending="${asc}" />`;
+                }).join("");
+                parts.push(`<OrderBy>${orderRefs}</OrderBy>`);
+            }
+            parts.push("</Query>");
+        }
+        const effectiveRowLimit = rowLimit ?? (options.limit != null && options.limit < CAML_PAGE_SIZE ? options.limit : CAML_PAGE_SIZE);
+        parts.push(`<RowLimit Paged="TRUE">${effectiveRowLimit}</RowLimit>`);
+        parts.push("</View>");
+        return parts.join("");
+    }
+    _parseCAMLQueryObject(args, options, rowLimit) {
+        const whereContent = this._buildWhereContent(args, 0);
+        return this._buildViewXml(whereContent, options, rowLimit);
     }
     _createCAMLQueryPayload(camlQuery, pagingInfo) {
         const query = {
@@ -2274,8 +2415,17 @@ class ListApi {
             query: query
         };
     }
-    async _queryRequest(args, limit = 1e3) {
-        const camlQuery = typeof args === "string" ? args : this._parseCAMLQueryObject(args);
+    async _queryRequest(args, options = {}) {
+        const limit = options.limit ?? Infinity;
+        let camlQuery;
+        if (args === undefined) {
+            camlQuery = this._buildViewXml(null, options);
+        } else if (typeof args === "string") {
+            camlQuery = args;
+        } else {
+            this._validateQueryObject(args, 0);
+            camlQuery = this._parseCAMLQueryObject(args, options);
+        }
         const digest = await this._siteApi.getRequestDigest();
         const url = `${this.endpoint}/getitems`;
         const allItems = [];
@@ -2295,9 +2445,52 @@ class ListApi {
         } while (pagingInfo && allItems.length < limit);
         return allItems.slice(0, limit);
     }
-    async getItems(query = {}, options = {}) {
-        const {limit: limit = 1e3} = options;
-        return this._queryRequest(query, limit);
+    async getItems(query, options = {}) {
+        return this._queryRequest(query, options);
+    }
+    async getItemsPaged(query, options = {}) {
+        const {pageSize: pageSize = CAML_PAGE_SIZE, ...queryOptions} = options;
+        if (typeof pageSize !== "number" || !Number.isInteger(pageSize) || pageSize < 1) {
+            throw new SystemError("ListApi", `getItemsPaged: pageSize must be a positive integer, received ${JSON.stringify(pageSize)}`, {
+                breaksFlow: true
+            });
+        }
+        const limit = queryOptions.limit ?? Infinity;
+        let fetched = 0;
+        const buildCamlQuery = rowLimit => {
+            if (query === undefined) {
+                return this._buildViewXml(null, queryOptions, rowLimit);
+            }
+            if (typeof query === "string") {
+                return query;
+            }
+            this._validateQueryObject(query, 0);
+            return this._parseCAMLQueryObject(query, queryOptions, rowLimit);
+        };
+        const url = `${this.endpoint}/getitems`;
+        const fetchPage = async pagingInfo => {
+            const remaining = limit - fetched;
+            const effectivePageSize = Math.min(pageSize, remaining);
+            const camlQuery = buildCamlQuery(effectivePageSize);
+            const digest = await this._siteApi.getRequestDigest();
+            const payload = this._createCAMLQueryPayload(camlQuery, pagingInfo);
+            const response = await spPOST(url, {
+                requestDigest: digest,
+                data: payload,
+                headers: {
+                    accept: SP_ACCEPT_MINIMAL
+                }
+            });
+            const items = (response?.value ?? []).map(item => parseFieldValues(item));
+            fetched += items.length;
+            const nextPagingInfo = response?.ListItemCollectionPosition?.PagingInfo ?? null;
+            const hasMore = nextPagingInfo !== null && fetched < limit;
+            return {
+                items: items,
+                next: hasMore ? () => fetchPage(nextPagingInfo) : null
+            };
+        };
+        return fetchPage(null);
     }
     async getItemByTitle(title) {
         return this._queryRequest({
@@ -2316,10 +2509,7 @@ class ListApi {
         });
     }
     async createItem(item) {
-        const serialized = {};
-        for (const [key, value] of Object.entries(item)) {
-            serialized[key] = toFieldValue(value);
-        }
+        const serialized = this._validateAndSerializeFields("createItem", item);
         const itemWithMetadata = $.extend({
             __metadata: {
                 type: __classPrivateFieldGet(this, _ListApi_listItemType, "f")
@@ -2333,6 +2523,8 @@ class ListApi {
         });
     }
     async deleteItem(id, etag) {
+        this._validateItemId(id);
+        this._validateETag(etag);
         const digest = await this._siteApi.getRequestDigest();
         const endpoint = `${this.endpoint}/items(${id})`;
         return spDELETE(endpoint, {
@@ -2343,7 +2535,7 @@ class ListApi {
         });
     }
     async deleteALLItems() {
-        const items = await this.getItems({}, {
+        const items = await this.getItems(undefined, {
             limit: Infinity
         });
         for (const item of items) {
@@ -2351,10 +2543,9 @@ class ListApi {
         }
     }
     async updateItem(id, fields, etag) {
-        const serialized = {};
-        for (const [key, value] of Object.entries(fields)) {
-            serialized[key] = toFieldValue(value);
-        }
+        this._validateItemId(id);
+        this._validateETag(etag);
+        const serialized = this._validateAndSerializeFields("updateItem", fields);
         const digest = await this._siteApi.getRequestDigest();
         const data = {
             __metadata: {
@@ -2376,6 +2567,7 @@ class ListApi {
         return response?.value ?? [];
     }
     async createField(options) {
+        this._validateNonEmptyString("createField", "title", options.title);
         const digest = await this._siteApi.getRequestDigest();
         const isNote = options.multiline === true;
         const body = {
@@ -2395,6 +2587,7 @@ class ListApi {
         });
     }
     async deleteField(internalName) {
+        this._validateNonEmptyString("deleteField", "internalName", internalName);
         const digest = await this._siteApi.getRequestDigest();
         await spDELETE(`${this.endpoint}/fields/getbyinternalnameortitle('${internalName}')`, {
             requestDigest: digest,
@@ -2404,6 +2597,7 @@ class ListApi {
         });
     }
     async setFieldIndexed(internalName, indexed) {
+        this._validateNonEmptyString("setFieldIndexed", "internalName", internalName);
         const digest = await this._siteApi.getRequestDigest();
         await spMERGE(`${this.endpoint}/fields/getbyinternalnameortitle('${internalName}')`, {
             data: {
@@ -2427,6 +2621,31 @@ class ListApi {
 }
 
 _ListApi_title = new WeakMap, _ListApi_listItemType = new WeakMap;
+
+function sanitizeQuery(fields) {
+    const {$or: $or, ...rest} = fields;
+    const result = {};
+    for (const [key, value] of Object.entries(rest)) {
+        if (value == null) continue;
+        if (typeof value === "object" && "operator" in value && value.operator === "Or") {
+            const clean = value.value.filter(v => v != null);
+            if (clean.length === 0) continue;
+            result[key] = {
+                ...value,
+                value: clean
+            };
+        } else {
+            result[key] = value;
+        }
+    }
+    if ($or && $or.length > 0) {
+        const cleanedOr = $or.map(sub => sanitizeQuery(sub)).filter(sub => sub !== undefined);
+        if (cleanedOr.length > 0) {
+            result.$or = cleanedOr;
+        }
+    }
+    return Object.keys(result).length > 0 ? result : undefined;
+}
 
 var _a$2, _SiteApi_instances, _SiteApi_url, _SiteApi_lists;
 
@@ -2480,7 +2699,15 @@ class SiteApi {
     getWebInfo() {
         return spGET(`${__classPrivateFieldGet(this, _SiteApi_url, "f")}/_api/web`);
     }
+    _validateTitle(method, title) {
+        if (typeof title !== "string" || title.trim() === "") {
+            throw new SystemError("SiteApi", `${method}: title must be a non-empty string, received ${JSON.stringify(title)}`, {
+                breaksFlow: true
+            });
+        }
+    }
     async createList(title, options = {}) {
+        this._validateTitle("createList", title);
         const {description: description = "", template: template = 100} = options;
         const digest = await this.getRequestDigest();
         await spPOST(`${__classPrivateFieldGet(this, _SiteApi_url, "f")}/_api/web/lists`, {
@@ -2498,6 +2725,7 @@ class SiteApi {
         return this.list(title);
     }
     async deleteList(title) {
+        this._validateTitle("deleteList", title);
         const digest = await this.getRequestDigest();
         await spDELETE(`${__classPrivateFieldGet(this, _SiteApi_url, "f")}/_api/web/lists/getbytitle('${title}')`, {
             requestDigest: digest,
@@ -2744,13 +2972,20 @@ class PeoplePicker extends ComboBox {
             const results = await searchUsers(query, this._searchOptions);
             if (!this.isAlive) return;
             this._lastSearchResults = results;
-            const options = results.map(r => ({
-                label: r.DisplayText,
-                value: UserIdentity.fromSearchResult(r),
-                disabled: !r.IsResolved
-            }));
+            const options = results.reduce((acc, r) => {
+                if (!r.EntityData?.Email || !r.DisplayText) {
+                    console.warn("PeoplePicker: skipping result without email or display name", r.DisplayText, r.EntityData?.Email);
+                    return acc;
+                }
+                acc.push({
+                    label: r.DisplayText,
+                    value: UserIdentity.fromSearchResult(r),
+                    disabled: !r.IsResolved
+                });
+                return acc;
+            }, []);
             if (this._isMultiple) {
-                const newEmails = new Set(results.map(r => r.EntityData?.Email));
+                const newEmails = new Set(options.map(o => o.value.email));
                 const preserved = this._dataset.filter(o => o.checked && !newEmails.has(o.value.email));
                 this._dataset = [ ...preserved, ...options ];
             } else {
@@ -2799,6 +3034,10 @@ class PeoplePicker extends ComboBox {
             const id = identifier.toLowerCase();
             const match = results.find(r => r.IsResolved && (r.Key.toLowerCase() === id || r.DisplayText.toLowerCase() === id || r.EntityData?.Email?.toLowerCase() === id || parseEmployeeId(r.Key).toLowerCase() === id));
             if (!match) return null;
+            if (!match.EntityData?.Email || !match.DisplayText) {
+                console.warn("PeoplePicker: skipping result without email or display name", match.DisplayText, match.EntityData?.Email);
+                return null;
+            }
             this._lastSearchResults = [ match ];
             const matchIdentity = UserIdentity.fromSearchResult(match);
             const option = {
@@ -4229,5 +4468,5 @@ class FieldLabel extends HTMDElement {
     }
 }
 
-export { AccordionGroup, AccordionItem, Button, Card, CheckBox, ComboBox, Container, ContextStore, CurrentUser, DateInput, Dialog, ErrorBoundary, FieldLabel, FormControl, FormField, FormSchema, Fragment, HTMDElement, Image, LinkButton, List, Loader, Modal, NavigationEvent, NumberInput, PeoplePicker, RoleManager, Router, SP_ACCEPT_MINIMAL, SidePanel, SimpleElapsedTimeBenchmark, SiteApi, StyleResource, SystemError, TabGroup, Text, TextArea, TextInput, Toast, UserIdentity, View, ViewSwitcher, dayjs as __dayjs, Fuse as __fuse, copyToClipboard, defineRoute, enforceStrictObject, escapeAttr, escapeHtml, fromFieldValue, generateRuntimeUID, generateUUIDv4, getFullUserDetails, getIcon, getUserProfile, pageReset, refreshRequestDigest, resolvePath, searchUsers, spDELETE, spGET, spMERGE, spPOST, startDigestTimer, stopDigestTimer, toFieldValue };
+export { AccordionGroup, AccordionItem, Button, Card, CheckBox, ComboBox, Container, ContextStore, CurrentUser, DateInput, Dialog, ErrorBoundary, FieldLabel, FormControl, FormField, FormSchema, Fragment, HTMDElement, Image, LinkButton, List, Loader, Modal, NavigationEvent, NumberInput, PeoplePicker, RoleManager, Router, SP_ACCEPT_MINIMAL, SidePanel, SimpleElapsedTimeBenchmark, SiteApi, StyleResource, SystemError, TabGroup, Text, TextArea, TextInput, Toast, UserIdentity, View, ViewSwitcher, dayjs as __dayjs, Fuse as __fuse, copyToClipboard, defineRoute, enforceStrictObject, escapeAttr, escapeHtml, fromFieldValue, generateRuntimeUID, generateUUIDv4, getFullUserDetails, getIcon, getUserProfile, pageReset, refreshRequestDigest, resolvePath, sanitizeQuery, searchUsers, spDELETE, spGET, spMERGE, spPOST, startDigestTimer, stopDigestTimer, toFieldValue };
 //# sourceMappingURL=nofbiz.base.js.map

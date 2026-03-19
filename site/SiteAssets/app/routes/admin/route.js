@@ -64,7 +64,7 @@ export default defineRoute((config) => {
     try {
       const siteApi = new SiteApi();
       const userRolesApi = siteApi.list('UserRoles');
-      allUsers = await userRolesApi.getItems({}, { limit: Infinity });
+      allUsers = await userRolesApi.getItems(undefined, { limit: Infinity });
       loading.dismiss();
       buildUI();
     } catch (error) {

@@ -75,6 +75,13 @@ These rules are the source of truth. The review checks code against these rules.
 5. **Compare routes** for DRY violations (duplicated code/styles)
 6. **Write structured review**
 
+## After Review
+
+- **Critical issues**: Report to orchestrator with file paths and line numbers for dev agent delegation
+- **Minor issues**: Present as suggestions, not blockers
+- **Incomplete/unfinished code**: Note explicitly, review only what exists
+- **Positive patterns**: Acknowledge good practices to reinforce them
+
 ## Output Format
 
 ```

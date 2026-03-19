@@ -20,20 +20,21 @@ Builds SharePoint on-premises applications using the SPARC base framework. Works
 
 ## Expertise
 
-- **All 27+ base components**: Container, Card, View, Modal, Dialog, Fragment, AccordionGroup, AccordionItem, TabGroup, ViewSwitcher, Button, LinkButton, TextInput, NumberInput, DateInput, ComboBox, CheckBox, FieldLabel, Text, List, Image, Icon, Toast, Loader, ErrorBoundary, TextArea
+- **All 28+ base components**: Container, Card, View, Modal, SidePanel, Dialog, Fragment, AccordionGroup, AccordionItem, TabGroup, ViewSwitcher, Button, LinkButton, TextInput, NumberInput, DateInput, ComboBox, CheckBox, FieldLabel, Text, List, Image, Icon, Toast, Loader, ErrorBoundary, TextArea
 - **Component selection**: Always use SPARC components -- never raw HTML elements (`<input>`, `<select>`, `<button>`, `<div>`). See Component Selection Guide in `.claude/sparc-guide.md` Section 2 for the full lookup table
 - **defineRoute pattern**: `defineRoute((config) => { config.setRouteTitle('...'); return [...]; })`
 - **FormField state management**: Observable state, `subscribe()/dispose()`, `isDisposed`, validation with Zod, `wasTouched`, `isValid`. Only for user-interactive data -- use plain variables for read-only data
 - **FormSchema**: Multi-field form state management
 - **ContextStore**: All-static cross-route key-value store -- `ContextStore.set(key, value)`, `.get(key)`, `.has(key)`, `.delete(key)`, `.clear()`. Auto-disposes FormField values. Use for data that must survive route navigation
 - **Router navigation**: `Router.navigateTo()`, query params, hash-based routing, route registration, navigation guards (`setNavigationGuard`/`clearNavigationGuard`)
-- **ListApi CRUD**: getItems (CAML, auto-pagination, `{ limit }` option), getItemByTitle, getItemByUUID, getOwnedItems, createItem, updateItem(id, fields, etag), deleteItem(id, etag), deleteALLItems -- all async. ETag required for update/delete (optimistic concurrency)
+- **ListApi CRUD**: getItems (CAML, auto-pagination, `{ limit, orderBy, viewFields }` options), getItemByTitle, getItemByUUID, getOwnedItems, createItem, updateItem(id, fields, etag), deleteItem(id, etag), deleteALLItems -- all async. ETag required for update/delete (optimistic concurrency). Input validation throws SystemError on invalid arguments. `sanitizeQuery()` helper for building queries from optional filter values
 - **ListApi field management**: getFields, createField (Text or Note only), deleteField, setFieldIndexed
 - **CurrentUser**: async singleton -- `await new CurrentUser().initialize(groupHierarchy?, options?)` (one-liner, returns `this`). `options` is `InitializeOptions` with optional `targetUser` to load a different user's profile (debug/testing). Type-safe `get(key)`: employeeId, loginName, displayName, email, siteUserId, jobTitle, pictureUrl, personalUrl, directReports, managers, peers, groups, profileProperties. Group hierarchy getters: accessLevel, group, groupId, groupTitle, isInitialized
+- **RoleManager**: List-based authorization -- `new RoleManager()` + `await roles.load(listName?)`. `hasRole(role)`, `hasAnyRole(roles)`, `canAccess(key, permissionMap)`. NOT a singleton (unlike CurrentUser). Use for fine-grained permissions beyond SP group hierarchy
 - **People API**: searchUsers, getUserProfile, getFullUserDetails -- identity resolution, auto-resolves DOMAIN\user to claims
 - **UserIdentity**: Immutable value class for user references in lists -- `new UserIdentity(email, displayName)`, `fromField()`, `manyFromField()`, `fromSearchResult()`, `fromCurrentUser()`. Auto-serializes via `toJSON()`. PeoplePicker stores `UserIdentity` as `ComboBoxOptionProps.value`. Convenience getters: `picker.selectedIdentity`, `picker.selectedIdentities`
 - **Toast/Dialog feedback**: Toast.success/error/info/warning (static), Toast.loading() for manual lifecycle, Toast.promise(promise, messages) for automatic loading/success/error, Dialog (instance with required title/content/footer/variant props)
-- **Modal/Dialog lifecycle**: render() to attach to DOM (hidden), open()/close() for visibility, isVisible getter. Dialog extends Modal with closeOnFocusLoss defaulting to false. Both onOpenHandler and onCloseHandler are reassignable setters
+- **Modal/Dialog/SidePanel lifecycle**: render() to attach to DOM (hidden), open()/close() for visibility, isVisible getter. Dialog extends Modal with closeOnFocusLoss defaulting to false. SidePanel extends Modal (slides from right, has title/content/footer). Both onOpenHandler and onCloseHandler are reassignable setters
 - **View/ViewSwitcher/TabGroup**: View has show()/hide() with animation, ViewSwitcher takes [key, View] tuples with setView(key)/setViewByIndex(n)/next()/previous(), TabGroup takes {key, label, view, disabled?} configs with setTab(key)/nextTab()/previousTab()
 - **Component lifecycle**: Manual render/refresh/remove, no virtual DOM, children setter for updates
 - **Bundled dependencies**: `__lodash` (debounce, cloneDeep, groupBy, etc.), `__zod` (validation), `__dayjs` (dates), `__fuse` (fuzzy search) -- use these instead of reinventing
@@ -84,9 +85,20 @@ field.dispose()
 
 ### SharePoint Data
 ```javascript
-const api = siteApi.list('ListName')    // prefer siteApi.list() over new ListApi()
-const items = await api.getItems({ Status: 'Active' })   // CAML query object, NOT REST filter
-const all = await api.getItems({}, { limit: Infinity })   // fetch all items
+const api = siteApi.list('ListName')
+const items = await api.getItems({ Status: 'Active' })
+const top50 = await api.getItems({}, { limit: 50 })
+// Sorting and field selection
+const sorted = await api.getItems({ Status: 'Active' }, {
+  orderBy: [{ field: 'Created', ascending: false }],
+  viewFields: ['Title', 'Status', 'Created'],
+})
+// sanitizeQuery for dynamic filters (strips null/undefined entries)
+const query = sanitizeQuery({
+  Status: statusValue || null,
+  Category: categoryValue || null,
+})
+const filtered = await api.getItems(query)
 await api.createItem({ Title: 'New', Status: 'Active' })
 // updateItem and deleteItem require etag (optimistic concurrency)
 await api.updateItem(item.ID, { Status: 'Completed' }, item['odata.etag'])
@@ -205,7 +217,7 @@ Available globally via SharePoint (not exported by SPARC):
 
 1. **Read rules** (mandatory first step) -- includes `.claude/rules/async-ux-patterns.md` (non-negotiable async safety requirements)
 2. **Read reference documentation** (`.claude/sparc-guide.md`) -- Section 10 "App Developer Quick Reference" has copy-paste patterns for common operations
-3. **Explore existing app code** to understand patterns already in use
+3. **Discover existing solutions** -- read `.claude/sparc-api-reference.md` for available components and utilities, then grep the app's `utils/` and existing routes for implementations that already solve the problem. See `.claude/rules/discovery-workflow.md`
 4. **Read `site/SiteAssets/app/libs/nofbiz/nofbiz.base.d.ts`** for exact component API signatures when needed
 5. **Implement** following conventions: defineRoute scoping, FormField state, folder-based routes
 6. **Provide complete files** with all imports, no placeholders

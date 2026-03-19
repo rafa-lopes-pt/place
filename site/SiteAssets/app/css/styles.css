@@ -1,25 +1,37 @@
 /* PACE Global Application Styles */
 
 :root {
-  --pace-green: #9ac433;
-  --pace-green-hover: #7da829;
-  --pace-green-light: rgba(154, 196, 51, 0.08);
-  --pace-dark: #2d3436;
-  --pace-bg: #f9fafb;
-  --pace-surface: #ffffff;
-  --pace-border: #e5e7eb;
-  --pace-text: #2d3436;
-  --pace-text-sec: #6b7280;
-  --pace-text-muted: #9ca3af;
-  --pace-red: #ef4444;
-  --pace-red-light: #fef2f2;
-  --pace-amber: #e8960c;
-  --pace-amber-light: #fef3c7;
-  --radius: 6px;
+	/* Brand -- PACE green over nofbiz teal */
+	--color-brand-primary: #9ac433;
+	--color-brand-hover: #7da829;
+	--color-brand-active: #6a8b21;
+	--color-brand-selected: rgba(154, 196, 51, 0.12);
+	--color-brand-subtle: rgba(154, 196, 51, 0.08);
+	--color-brand-fg: #fff;
+	--color-brand-stroke: #9ac433;
+
+	/* Danger -- PACE red over nofbiz red */
+	--color-danger-primary: #ef4444;
+	--color-danger-hover: #dc2626;
+	--color-danger-bg: #fef2f2;
+	--color-danger-fg: #ef4444;
+
+	/* Warning -- PACE amber over nofbiz orange */
+	--color-warning-primary: #e8960c;
+	--color-warning-hover: #d4880b;
+	--color-warning-bg: #fef3c7;
+	--color-warning-fg: #e8960c;
+
+	/* Radius -- PACE 6px (nofbiz default is 8px) */
+	--radius-lg: 6px;
 }
 
 #root {
-  max-width: 1100px;
-  margin: 106px auto 0;
-  padding: 32px;
+	--header-footer-height: 6.625rem;
+	margin-top: var(--header-footer-height);
+	padding: 2rem 0;
+	padding-bottom: calc(var(--header-footer-height) * 2
+  );
+	/* height: 100svh;
+  overflow-y: auto; */
 }

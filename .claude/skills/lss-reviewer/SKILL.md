@@ -131,6 +131,13 @@ Conversational review with natural flow. Sections emerge organically:
 
 Keep paragraphs short (2-3 sentences). Focus on 3-5 major observations. Go deep on those rather than shallow on 20 issues.
 
+## After Review
+
+- **Critical issues**: Report to orchestrator with file paths and line numbers for dev agent delegation
+- **Minor issues**: Present as suggestions, not blockers
+- **Incomplete/unfinished code**: Note explicitly, review only what exists
+- **Positive patterns**: Acknowledge good practices to reinforce them
+
 ## Reference Files
 
 - `.claude/sparc-guide.md` -- architecture, patterns, and conventions

@@ -49,35 +49,37 @@ export default defineRoute(async (config) => {
   const teamHeader = new Container([
     new Container([
       new Text(deptName, { type: 'h2', class: 'pace-cta-text' }),
+
       new Text(userOUID, { type: 'span', class: 'pace-chip pace-chip--inactive' }),
       new Text(`${scopeCount} iniciativa${scopeCount !== 1 ? 's' : ''}`, { type: 'span', class: 'pace-chip pace-chip--active' }),
+    
     ], { class: 'pace-cta-left' }),
   ], { class: 'pace-cta' });
 
-  // -- Summary stats --
-  const activeCount = teamItems.filter((i) =>
-    i.Status === STATUS.EM_EXECUCAO || i.Status === STATUS.POR_VALIDAR ||
-    i.Status === STATUS.VALIDADO_GESTOR || i.Status === STATUS.VALIDADO_MENTOR
-  ).length;
-  const implementedCount = teamItems.filter((i) => i.Status === STATUS.IMPLEMENTADO).length;
-  const pendingCount = teamItems.filter((i) =>
-    i.Status === STATUS.SUBMETIDO || i.Status === STATUS.EM_REVISAO
-  ).length;
+  // // -- Summary stats --
+  // const activeCount = teamItems.filter((i) =>
+  //   i.Status === STATUS.EM_EXECUCAO || i.Status === STATUS.POR_VALIDAR ||
+  //   i.Status === STATUS.VALIDADO_GESTOR || i.Status === STATUS.VALIDADO_MENTOR
+  // ).length;
+  // const implementedCount = teamItems.filter((i) => i.Status === STATUS.IMPLEMENTADO).length;
+  // const pendingCount = teamItems.filter((i) =>
+  //   i.Status === STATUS.SUBMETIDO || i.Status === STATUS.EM_REVISAO
+  // ).length;
 
-  const statsRow = new Container([
-    new Container([
-      new Text(String(activeCount), { type: 'span', class: 'pace-stat-number' }),
-      new Text('Em Curso', { type: 'span', class: 'pace-stat-label' }),
-    ], { class: 'pace-stat-card' }),
-    new Container([
-      new Text(String(pendingCount), { type: 'span', class: 'pace-stat-number' }),
-      new Text('Pendentes', { type: 'span', class: 'pace-stat-label' }),
-    ], { class: 'pace-stat-card' }),
-    new Container([
-      new Text(String(implementedCount), { type: 'span', class: 'pace-stat-number' }),
-      new Text('Implementadas', { type: 'span', class: 'pace-stat-label' }),
-    ], { class: 'pace-stat-card' }),
-  ], { class: 'pace-stats-row' });
+  // const statsRow = new Container([
+  //   new Container([
+  //     new Text(String(activeCount), { type: 'span', class: 'pace-stat-number' }),
+  //     new Text('Em Curso', { type: 'span', class: 'pace-stat-label' }),
+  //   ], { class: 'pace-stat-card' }),
+  //   new Container([
+  //     new Text(String(pendingCount), { type: 'span', class: 'pace-stat-number' }),
+  //     new Text('Pendentes', { type: 'span', class: 'pace-stat-label' }),
+  //   ], { class: 'pace-stat-card' }),
+  //   new Container([
+  //     new Text(String(implementedCount), { type: 'span', class: 'pace-stat-number' }),
+  //     new Text('Implementadas', { type: 'span', class: 'pace-stat-label' }),
+  //   ], { class: 'pace-stat-card' }),
+  // ], { class: 'pace-stats-row' });
 
   // -- Helper: Build HTML table from data --
   const buildTable = (headers, rows, onRowClick) => {
@@ -201,5 +203,5 @@ export default defineRoute(async (config) => {
     tableContainer,
   ]);
 
-  return createPageLayout([teamHeader, statsRow, tableSection]);
+  return createPageLayout([teamHeader, tableSection]);
 });

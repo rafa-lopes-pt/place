@@ -20,6 +20,7 @@ import {
   buildCollabStub,
 } from '../../utils/format-helpers.js';
 import { createPageLayout } from '../../utils/navbar.js';
+import { openInitiativeDetail } from '../../utils/side-panel-detail.js';
 
 export default defineRoute((config) => {
   config.setRouteTitle('Gestor');
@@ -63,7 +64,7 @@ export default defineRoute((config) => {
     });
 
     const savingsAprovados = [...validadosGestor, ...implementados].reduce(
-      (sum, i) => sum + parseSaving(i.SavingValidated || i.SavingEstimate),
+      (sum, i) => sum + parseSaving(i.SavingValidated || i.SavingsValue),
       0
     );
 
@@ -143,7 +144,7 @@ export default defineRoute((config) => {
   }
 
   function buildPendingItem(item) {
-    const saving = parseSaving(item.SavingEstimate);
+    const saving = parseSaving(item.SavingsValue);
     return new Container(
       [
         new Container(
@@ -161,9 +162,7 @@ export default defineRoute((config) => {
         ),
         new Button('Aprovar', {
           variant: 'secondary',
-          onClickHandler: () => {
-            alert('Detalhe da iniciativa (placeholder)');
-          },
+          onClickHandler: () => openInitiativeDetail(item, 'gestor'),
         }),
       ],
       { class: 'pace-pending-item' }
@@ -176,16 +175,14 @@ export default defineRoute((config) => {
 
     const cols = ['Codigo', 'Iniciativa', 'Estado', 'Colaborador', 'Tipo', 'Valor', ''];
     const rows = historyItems.map((item) => {
-      const saving = parseSaving(item.SavingValidated || item.SavingEstimate);
+      const saving = parseSaving(item.SavingValidated || item.SavingsValue);
       return new Container(
         [
           new Text(item.Code, { type: 'span' }),
           new Button(item.Title, {
             variant: 'secondary',
             isOutlined: true,
-            onClickHandler: () => {
-              alert('Detalhe da iniciativa (placeholder)');
-            },
+            onClickHandler: () => openInitiativeDetail(item, 'gestor'),
             class: 'pace-table-link-btn',
           }),
           new Text(statusLabel(item.Status), {
@@ -197,9 +194,7 @@ export default defineRoute((config) => {
           new Text(saving ? `EUR ${saving.toLocaleString()}` : '---', { type: 'span' }),
           new Button('Ver', {
             variant: 'secondary',
-            onClickHandler: () => {
-              alert('Detalhe da iniciativa (placeholder)');
-            },
+            onClickHandler: () => openInitiativeDetail(item, 'gestor'),
           }),
         ],
         { class: 'pace-table-row' }

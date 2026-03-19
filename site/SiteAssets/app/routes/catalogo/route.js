@@ -20,6 +20,7 @@ import {
   buildTableHeader,
 } from '../../utils/format-helpers.js';
 import { createPageLayout } from '../../utils/navbar.js';
+import { openInitiativeDetail } from '../../utils/side-panel-detail.js';
 
 export default defineRoute((config) => {
   config.setRouteTitle('Catalogo');
@@ -140,15 +141,13 @@ export default defineRoute((config) => {
     headerCols.push('');
 
     const rows = items.map((item) => {
-      const saving = parseSaving(item.SavingValidated || item.SavingEstimate);
+      const saving = parseSaving(item.SavingValidated || item.SavingsValue);
       const cells = [
         new Text(item.Code, { type: 'span' }),
         new Button(item.Title, {
           variant: 'secondary',
           isOutlined: true,
-          onClickHandler: () => {
-            alert('Detalhe da iniciativa (placeholder)');
-          },
+          onClickHandler: () => openInitiativeDetail(item, 'catalogo'),
           class: 'pace-table-link-btn',
         }),
         new Text(statusLabel(item.Status), {
@@ -175,9 +174,7 @@ export default defineRoute((config) => {
       cells.push(
         new Button('Ver', {
           variant: 'secondary',
-          onClickHandler: () => {
-            alert('Detalhe da iniciativa (placeholder)');
-          },
+          onClickHandler: () => openInitiativeDetail(item, 'catalogo'),
         })
       );
 

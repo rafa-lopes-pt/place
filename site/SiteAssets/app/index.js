@@ -18,7 +18,7 @@ const appStyles = new StyleResource("@/css/styles.css");
 // const themeStyles = new StyleResource("@/css/pace-theme.css");
 await Promise.all([appStyles.ready]);
 
-const user = await new CurrentUser().initialize([],{targetUser:'Rafael Lopes'});
+const user = await new CurrentUser().initialize([]);
 
 const roleManager = new RoleManager();
 await roleManager.load("UserRoles");

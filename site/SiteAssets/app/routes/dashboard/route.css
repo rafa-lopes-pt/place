@@ -20,7 +20,7 @@
   font-size: 0.85rem;
   border: none;
   background: transparent;
-  color: var(--pace-green-hover);
+  color: var(--color-brand-hover);
   cursor: pointer;
   padding: 4px 0;
 }
@@ -30,7 +30,7 @@
 }
 
 .pace-team-row--expanded {
-  background: var(--pace-green-light);
+  background: var(--color-brand-subtle);
 }
 
 .pace-totals-label {
@@ -57,12 +57,12 @@
 
 .pace-filter-count {
   font-size: 0.82rem;
-  color: var(--pace-text-sec);
+  color: var(--color-fg-secondary);
   white-space: nowrap;
 }
 
 .pace-empty {
   font-size: 0.88rem;
-  color: var(--pace-text-muted);
+  color: var(--color-fg-tertiary);
   padding: 16px 0;
 }

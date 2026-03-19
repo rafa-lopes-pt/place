@@ -56,8 +56,8 @@ export default defineRoute(async (config) => {
   const pendingCount = ownedItems.filter((item) => pendingStatuses.includes(item.Status)).length;
 
   const savingsTotal = ownedItems.reduce((sum, item) => {
-    if (item.SavingType && item.SavingType !== 'Sem saving' && item.SavingEstimate) {
-      const val = parseFloat(String(item.SavingEstimate).replace(/[^\d.]/g, '')) || 0;
+    if (item.SavingType && item.SavingType !== 'Sem saving' && item.SavingsValue) {
+      const val = parseFloat(String(item.SavingsValue).replace(/[^\d.]/g, '')) || 0;
       return sum + val;
     }
     return sum;
@@ -91,7 +91,7 @@ export default defineRoute(async (config) => {
       new Text('Bem-vindo a plataforma de melhoria continua. Submeta ideias, acompanhe o progresso e quantifique o impacto das suas iniciativas PDCA.', { type: 'p' }),
       new Container([
         newInitiativeBtn,
-        new LinkButton('Ver as minhas iniciativas ->', 'pessoal', { variant: 'secondary', class: 'pace-hero-link-btn' }),
+        new LinkButton('Ver as minhas iniciativas', 'pessoal', { variant: 'secondary', class: 'pace-hero-link-btn' }),
       ], { class: 'pace-hero__actions' }),
     ], { class: 'pace-hero__content' }),
     new Container([pdcaWheel], { class: 'pace-hero__visual' }),
@@ -154,8 +154,8 @@ export default defineRoute(async (config) => {
   // -- Two-column grid --
   const twoColGrid = new Container([
     notificationsSection,
-    mentorsSection,
+    // mentorsSection,
   ], { class: 'pace-home-grid' });
 
-  return createPageLayout([hero, kpiRow, twoColGrid]);
+  return createPageLayout([hero,  twoColGrid]);
 });

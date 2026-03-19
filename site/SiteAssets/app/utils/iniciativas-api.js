@@ -8,7 +8,7 @@ const listApi = siteApi.list('Iniciativas');
  * @returns {Promise<Array>}
  */
 export async function getAll() {
-  return listApi.getItems({}, { limit: Infinity });
+  return listApi.getItems(undefined, { limit: Infinity });
 }
 
 /**
@@ -82,7 +82,7 @@ export async function getByUUIDs(uuids) {
  * @returns {Promise<unknown>}
  */
 export async function create(fields) {
-  const allItems = await listApi.getItems({}, { limit: Infinity });
+  const allItems = await listApi.getItems(undefined, { limit: Infinity });
   const maxCode = allItems.reduce((max, item) => {
     const num = parseInt(item.Code?.replace('PDCA-', '') || '0', 10);
     return num > max ? num : max;
