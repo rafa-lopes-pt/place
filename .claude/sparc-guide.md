@@ -1017,7 +1017,7 @@ await api.deleteItem(items[0].ID, items[0]['odata.etag'])
 await api.deleteALLItems()       // deletes every item (auto-passes etags)
 ```
 
-**Concurrency:** All query methods (`getItems`, `getItemByTitle`, `getItemByUUID`, `getOwnedItems`) return items with an `odata.etag` property. Write methods (`updateItem`, `deleteItem`) require this etag. If the item was modified since the etag was obtained, SharePoint returns HTTP 412 and SPARC throws `SystemError('ConcurrencyConflict', ..., { breaksFlow: false })`. App code should catch this, re-fetch the item, and notify the user:
+**Concurrency:** All query methods (`getItems`, `getItemsPaged`, `getItemByTitle`, `getItemByUUID`, `getOwnedItems`) return items with an `odata.etag` property. Write methods (`updateItem`, `deleteItem`) require this etag. If the item was modified since the etag was obtained, SharePoint returns HTTP 412 and SPARC throws `SystemError('ConcurrencyConflict', ..., { breaksFlow: false })`. App code should catch this, re-fetch the item, and notify the user:
 
 ```javascript
 try {
@@ -1068,6 +1068,38 @@ const query = sanitizeQuery({
 const results = await api.getItems(query)
 ```
 
+**Manual pagination** -- `getItemsPaged()` returns pages one at a time via a `next()` function instead of auto-fetching everything. Same query syntax as `getItems()`. Use when you need incremental loading, progress feedback, or want to process pages as they arrive:
+
+```javascript
+// Basic usage -- iterate page by page
+let page = await api.getItemsPaged({ Status: 'Active' })
+while (page) {
+  processItems(page.items)
+  page = page.next ? await page.next() : null
+}
+
+// Custom page size
+let page = await api.getItemsPaged({}, { pageSize: 100 })
+
+// Combine with limit, orderBy, viewFields
+let page = await api.getItemsPaged({ Status: 'Active' }, {
+  pageSize: 50,
+  limit: 200,
+  orderBy: [{ field: 'Created', ascending: false }],
+  viewFields: ['Title', 'Status']
+})
+
+// Collect all into a flat array (equivalent to getItems)
+const allItems = []
+let page = await api.getItemsPaged(query)
+while (page) {
+  allItems.push(...page.items)
+  page = page.next ? await page.next() : null
+}
+```
+
+`PaginatedResult<T>` shape: `{ items: (T & SPItemWithETag)[], next: (() => Promise<PaginatedResult<T>>) | null }`. `next` is `null` when no more pages remain or when `limit` is reached.
+
 ### 6.3.1 Field Value Serialization
 
 Source: `src/base/sharepoint/fieldValue.ts`
@@ -1085,7 +1117,7 @@ SharePoint stores all list item values as strings. ListApi handles conversion au
 
 **Reads (auto-parsed via `parseFieldValues`):**
 
-All query methods (`getItems`, `getItemByTitle`, `getItemByUUID`, `getOwnedItems`) auto-parse returned items:
+All query methods (`getItems`, `getItemsPaged`, `getItemByTitle`, `getItemByUUID`, `getOwnedItems`) auto-parse returned items:
 - `"true"` / `"false"` -> `boolean`
 - Strings starting with `{` or `[` -> parsed as JSON (fallback to raw string on parse error)
 - Numeric strings remain as strings (preserves CAML query compatibility)

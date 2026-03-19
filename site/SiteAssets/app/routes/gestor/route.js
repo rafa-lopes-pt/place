@@ -86,7 +86,7 @@ export default defineRoute((config) => {
       new Button('Aprovar', {
         variant: 'primary',
         onClickHandler: () => {
-          if (pendingGrid.instance) {
+          if (pendingGrid.isAlive && pendingGrid.instance) {
             pendingGrid.instance[0].scrollIntoView({ behavior: 'smooth' });
           }
         },

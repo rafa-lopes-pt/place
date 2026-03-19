@@ -22,15 +22,16 @@ export default defineRoute((config) => {
 
   // -- helpers --
 
+  const ROLE_LABELS = {
+    colaborador: 'Colaborador',
+    resp_equipa: 'Resp. Equipa',
+    gestor: 'Gestor',
+    mentor: 'Mentor',
+    executivo: 'Executivo',
+  };
+
   function roleLabel(role) {
-    const labels = {
-      colaborador: 'Colaborador',
-      resp_equipa: 'Resp. Equipa',
-      gestor: 'Gestor',
-      mentor: 'Mentor',
-      executivo: 'Executivo',
-    };
-    return labels[role] || role;
+    return ROLE_LABELS[role] || role;
   }
 
   function roleChipClass(role) {
@@ -83,13 +84,7 @@ export default defineRoute((config) => {
       const roles = parseJsonArray(user.Roles);
 
       if (profileVal) {
-        const roleKey = Object.entries({
-          colaborador: 'Colaborador',
-          resp_equipa: 'Resp. Equipa',
-          gestor: 'Gestor',
-          mentor: 'Mentor',
-          executivo: 'Executivo',
-        }).find(([, label]) => label === profileVal);
+        const roleKey = Object.entries(ROLE_LABELS).find(([, label]) => label === profileVal);
         if (roleKey && !roles.includes(roleKey[0])) return false;
       }
 

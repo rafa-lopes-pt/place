@@ -57,7 +57,7 @@ SharePoint is data store + authentication only. SPARC owns all UI, validation, r
 - Cross-site permission considerations
 
 ### SPARC API Surface Awareness
-- **ListApi**: getItems (CAML, auto-pagination, `{ limit, orderBy, viewFields }` options), getItemByTitle, getItemByUUID, getOwnedItems, createItem, updateItem (MERGE), deleteItem, deleteALLItems -- all async. `sanitizeQuery()` for safe query building from optional values. Input validation on all methods
+- **ListApi**: getItems (CAML, auto-pagination, `{ limit, orderBy, viewFields }` options), getItemsPaged (manual pagination via PaginatedResult with next()), getItemByTitle, getItemByUUID, getOwnedItems, createItem, updateItem (MERGE), deleteItem, deleteALLItems -- all async. `sanitizeQuery()` for safe query building from optional values. Input validation on all methods
 - **ListApi field management**: getFields, createField (Text or Note only, `richText: false`), deleteField, setFieldIndexed
 - **SiteApi**: singleton per normalized URL, `list(title)` cached factory, getRequestDigest (local: DOM, remote: cached fetch with coalescing), createList, deleteList, getLists, getSiteGroups, getWebInfo, getFullUserDetails
 - **CurrentUser**: async singleton -- `await new CurrentUser().initialize(groupHierarchy?, options?)` (one-liner, returns `this`). `options` is `InitializeOptions` with optional `targetUser` to load a different user's profile (debug/testing). Type-safe `get(key)` with keys: employeeId, loginName, displayName, email, siteUserId, jobTitle, pictureUrl, personalUrl, directReports, managers, peers, groups, profileProperties. Group hierarchy getters: accessLevel, group, groupId, groupTitle, isInitialized

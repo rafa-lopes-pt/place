@@ -1,6 +1,7 @@
 import {
   Text,
   Container,
+  Button,
   Toast,
   defineRoute,
 } from '../../libs/nofbiz/nofbiz.base.js';
@@ -12,6 +13,7 @@ import { STATUS, statusLabel, chipClass } from '../../utils/status-helpers.js';
 import { openInitiativeDetail } from '../../utils/side-panel-detail.js';
 import { createFilterBar } from '../../utils/filters.js';
 import { createPageLayout } from '../../utils/navbar.js';
+import { buildTableHeader } from '../../utils/format-helpers.js';
 
 export default defineRoute(async (config) => {
   config.setRouteTitle('Departamento');
@@ -52,73 +54,9 @@ export default defineRoute(async (config) => {
 
       new Text(userOUID, { type: 'span', class: 'pace-chip pace-chip--inactive' }),
       new Text(`${scopeCount} iniciativa${scopeCount !== 1 ? 's' : ''}`, { type: 'span', class: 'pace-chip pace-chip--active' }),
-    
+
     ], { class: 'pace-cta-left' }),
   ], { class: 'pace-cta' });
-
-  // // -- Summary stats --
-  // const activeCount = teamItems.filter((i) =>
-  //   i.Status === STATUS.EM_EXECUCAO || i.Status === STATUS.POR_VALIDAR ||
-  //   i.Status === STATUS.VALIDADO_GESTOR || i.Status === STATUS.VALIDADO_MENTOR
-  // ).length;
-  // const implementedCount = teamItems.filter((i) => i.Status === STATUS.IMPLEMENTADO).length;
-  // const pendingCount = teamItems.filter((i) =>
-  //   i.Status === STATUS.SUBMETIDO || i.Status === STATUS.EM_REVISAO
-  // ).length;
-
-  // const statsRow = new Container([
-  //   new Container([
-  //     new Text(String(activeCount), { type: 'span', class: 'pace-stat-number' }),
-  //     new Text('Em Curso', { type: 'span', class: 'pace-stat-label' }),
-  //   ], { class: 'pace-stat-card' }),
-  //   new Container([
-  //     new Text(String(pendingCount), { type: 'span', class: 'pace-stat-number' }),
-  //     new Text('Pendentes', { type: 'span', class: 'pace-stat-label' }),
-  //   ], { class: 'pace-stat-card' }),
-  //   new Container([
-  //     new Text(String(implementedCount), { type: 'span', class: 'pace-stat-number' }),
-  //     new Text('Implementadas', { type: 'span', class: 'pace-stat-label' }),
-  //   ], { class: 'pace-stat-card' }),
-  // ], { class: 'pace-stats-row' });
-
-  // -- Helper: Build HTML table from data --
-  const buildTable = (headers, rows, onRowClick) => {
-    const headerCells = headers.map((h) => `<th>${h}</th>`).join('');
-
-    const bodyRows = rows.map((row, rowIdx) => {
-      const cells = row.cells.map((cell, cellIdx) => {
-        if (cellIdx === row.chipIndex && row.chipStatus) {
-          return `<td><span class="pace-chip ${chipClass(row.chipStatus)}">${cell}</span></td>`;
-        }
-        if (cellIdx === row.cells.length - 1 && cell === 'Ver') {
-          return `<td><span class="pace-table-link" data-row="${rowIdx}">Ver</span></td>`;
-        }
-        return `<td>${cell}</td>`;
-      }).join('');
-      return `<tr data-row-idx="${rowIdx}">${cells}</tr>`;
-    }).join('');
-
-    const tableContainer = new Container([], { class: 'pace-table-wrap' });
-    tableContainer.children = new Text(
-      `<table><thead><tr>${headerCells}</tr></thead><tbody>${bodyRows}</tbody></table>`,
-      { type: 'span' }
-    );
-
-    if (onRowClick) {
-      tableContainer.setEventHandler('click', (e) => {
-        const target = e.target;
-        const row = target.closest('tr[data-row-idx]');
-        if (row) {
-          const idx = parseInt(row.getAttribute('data-row-idx'), 10);
-          if (rows[idx]) {
-            onRowClick(rows[idx].item);
-          }
-        }
-      });
-    }
-
-    return tableContainer;
-  };
 
   // -- Filterable table --
   let filteredItems = [...teamItems];
@@ -130,27 +68,35 @@ export default defineRoute(async (config) => {
       return;
     }
 
-    const table = buildTable(
-      ['Codigo', 'Iniciativa', 'Estado', 'Colaborador', 'Equipa', 'Saving', 'Valor', ''],
-      filteredItems.map((item) => ({
-        cells: [
-          item.Code || '-',
-          item.Title || '-',
-          statusLabel(item.Status),
-          item.CreatedByName || '-',
-          item.ImpactedTeamOUID || '-',
-          item.SavingType || 'Sem saving',
-          item.SavingsValue || '-',
-          'Ver',
-        ],
-        chipIndex: 2,
-        chipStatus: item.Status,
-        item,
-      })),
-      (item) => openInitiativeDetail(item, 'departamento'),
-    );
+    const rows = filteredItems.map((item) => new Container(
+      [
+        new Text(item.Code || '-', { type: 'span' }),
+        new Button(item.Title || '-', {
+          variant: 'secondary',
+          isOutlined: true,
+          onClickHandler: () => openInitiativeDetail(item, 'departamento'),
+          class: 'pace-table-link-btn',
+        }),
+        new Text(statusLabel(item.Status), {
+          type: 'span',
+          class: `pace-chip ${chipClass(item.Status)}`,
+        }),
+        new Text(item.CreatedByName || '-', { type: 'span' }),
+        new Text(item.ImpactedTeamOUID || '-', { type: 'span' }),
+        new Text(item.SavingType || 'Sem saving', { type: 'span' }),
+        new Text(item.SavingsValue || '-', { type: 'span' }),
+        new Button('Ver', {
+          variant: 'secondary',
+          onClickHandler: () => openInitiativeDetail(item, 'departamento'),
+        }),
+      ],
+      { class: 'pace-table-row' }
+    ));
 
-    tableContainer.children = table;
+    tableContainer.children = new Container(
+      [buildTableHeader(['Codigo', 'Iniciativa', 'Estado', 'Colaborador', 'Equipa', 'Saving', 'Valor', '']), ...rows],
+      { class: 'pace-table-wrap' }
+    );
   };
 
   const statusOptions = [

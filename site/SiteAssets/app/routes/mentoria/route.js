@@ -104,12 +104,64 @@ export default defineRoute((config) => {
       ),
     ];
 
-    // Open initiatives table
-    rebuildOpenTable();
+    // Open initiatives table -- create filter components ONCE
+    const statusOptions = [
+      STATUS.RASCUNHO,
+      STATUS.SUBMETIDO,
+      STATUS.EM_EXECUCAO,
+      STATUS.POR_VALIDAR,
+      STATUS.EM_REVISAO,
+    ].map((s) => statusLabel(s));
+
+    const statusCombo = new ComboBox(statusFilter, statusOptions, {
+      placeholder: 'Filtrar por estado...',
+    });
+    const searchInput = new TextInput(searchField, {
+      placeholder: 'Pesquisar...',
+      debounceMs: 300,
+    });
+    const clearBtn = new Button('Limpar', {
+      variant: 'secondary',
+      onClickHandler: () => {
+        statusFilter.value = '';
+        searchField.value = '';
+      },
+    });
+    const countText = new Text([() => `${getFilteredOpenItems().length} resultados`], {
+      type: 'span',
+      class: 'pace-filter-count',
+    });
+    const filterBarRow = new Container(
+      [statusCombo, searchInput, clearBtn, countText],
+      { class: 'pace-filters' }
+    );
+
+    // Container that holds ONLY the table rows (rebuilt on filter change)
+    const tableContent = new Container([]);
+
+    // Set section structure ONCE
+    openTableSection.children = [
+      new Text('Iniciativas em Aberto', { type: 'h2', class: 'pace-sec-title' }),
+      filterBarRow,
+      tableContent,
+    ];
+
+    // Function to rebuild just the table data
+    const rebuildTableData = () => {
+      const filtered = getFilteredOpenItems();
+      const cols = ['Codigo', 'Iniciativa', 'Estado', 'Colaborador', 'Equipa', 'Saving', 'Valor', ''];
+      const tableRows = filtered.map((item) => buildTableRow(item));
+      tableContent.children = new Container(
+        [buildTableHeader(cols), ...tableRows],
+        { class: 'pace-table-wrap' }
+      );
+    };
+
+    rebuildTableData();
 
     // Subscribe to filter changes
-    statusFilter.subscribe(() => rebuildOpenTable());
-    searchField.subscribe(() => rebuildOpenTable());
+    statusFilter.subscribe(rebuildTableData);
+    searchField.subscribe(rebuildTableData);
 
     // Collaboration stubs
     collabSection.children = [
@@ -198,61 +250,6 @@ export default defineRoute((config) => {
         return false;
       return true;
     });
-  }
-
-  function rebuildOpenTable() {
-    const filtered = getFilteredOpenItems();
-
-    const statusOptions = [
-      STATUS.RASCUNHO,
-      STATUS.SUBMETIDO,
-      STATUS.EM_EXECUCAO,
-      STATUS.POR_VALIDAR,
-      STATUS.EM_REVISAO,
-    ].map((s) => statusLabel(s));
-
-    const statusCombo = new ComboBox(statusFilter, statusOptions, {
-      placeholder: 'Filtrar por estado...',
-    });
-    const searchInput = new TextInput(searchField, {
-      placeholder: 'Pesquisar...',
-      debounceMs: 300,
-    });
-
-    const clearBtn = new Button('Limpar', {
-      variant: 'secondary',
-      onClickHandler: () => {
-        statusFilter.value = '';
-        searchField.value = '';
-      },
-    });
-
-    const filterBarRow = new Container(
-      [
-        statusCombo,
-        searchInput,
-        clearBtn,
-        new Text([() => `${getFilteredOpenItems().length} resultados`], {
-          type: 'span',
-          class: 'pace-filter-count',
-        }),
-      ],
-      { class: 'pace-filters' }
-    );
-
-    const cols = ['Codigo', 'Iniciativa', 'Estado', 'Colaborador', 'Equipa', 'Saving', 'Valor', ''];
-    const tableRows = filtered.map((item) => buildTableRow(item));
-
-    const tableWrapper = new Container(
-      [buildTableHeader(cols), ...tableRows],
-      { class: 'pace-table-wrap' }
-    );
-
-    openTableSection.children = [
-      new Text('Iniciativas em Aberto', { type: 'h2', class: 'pace-sec-title' }),
-      filterBarRow,
-      tableWrapper,
-    ];
   }
 
   function buildTableRow(item) {

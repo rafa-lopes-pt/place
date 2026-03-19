@@ -10,13 +10,14 @@ API-specific gotchas that cause incorrect code if not followed.
 - `CAMLQueryObject` supports all operators: string values default to `Eq`; use `{ value, operator }` for explicit operators (Neq, Gt, Lt, Geq, Leq, Contains, BeginsWith, IsNull, IsNotNull); use `{ value: [...], operator: 'Or', match? }` for same-field multi-value OR; use `$or: [...]` for cross-field OR
 - `getItems()` accepts an options object: `{ limit, orderBy, viewFields }` -- limit defaults to all items, orderBy sorts via CAML OrderBy, viewFields restricts returned fields
 - `getItems()` automatically paginates in 500-item pages
+- `getItemsPaged()` returns a `PaginatedResult<T>` with `items` and a `next()` function for manual page-by-page iteration. Accepts `GetItemsPagedOptions` which extends `GetItemsOptions` with `pageSize` (default 500). Use when you need incremental loading or want to process pages as they arrive
 - Method is `createItem()`, not `addItem()`
 - `updateItem(id, fields, etag)` -- partial update via MERGE, only specified fields are modified; etag is required for optimistic concurrency
 - `deleteItem(id, etag)` -- etag is required
 - All query methods return items with `odata.etag` (intersection type `T & SPItemWithETag`) -- use this etag for subsequent writes
 - On ETag mismatch, SharePoint returns HTTP 412, which SPARC surfaces as `SystemError('ConcurrencyConflict', ..., { breaksFlow: false })` -- app code should catch this, re-fetch, and notify the user
 - Schema operations (`deleteField`, `setFieldIndexed`) use wildcard `IF-MATCH: '*'` (no concurrency control for metadata)
-- Query methods: `getItems()`, `getItemByTitle()`, `getItemByUUID()`, `getOwnedItems()` -- there is no `getItem(id)`
+- Query methods: `getItems()`, `getItemsPaged()`, `getItemByTitle()`, `getItemByUUID()`, `getOwnedItems()` -- there is no `getItem(id)`
 - Field management: `getFields()`, `createField(options)`, `deleteField(internalName)`, `setFieldIndexed(internalName, indexed)`
 - Only create Text or Note (multi-line text) fields -- never use other SharePoint field types
 - Note fields: always `richText: false` (set automatically by `createField`)
@@ -47,7 +48,7 @@ ListApi automatically handles conversion between JavaScript types and SharePoint
 
 ### Auto-Parsing (Reads)
 
-All query methods (`getItems`, `getItemByTitle`, `getItemByUUID`, `getOwnedItems`) auto-parse returned items:
+All query methods (`getItems`, `getItemsPaged`, `getItemByTitle`, `getItemByUUID`, `getOwnedItems`) auto-parse returned items:
 
 - `"true"` / `"false"` -> `boolean`
 - Strings starting with `{` or `[` -> parsed as JSON (fallback to raw string on parse error)
