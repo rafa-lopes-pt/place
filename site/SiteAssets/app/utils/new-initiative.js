@@ -20,6 +20,7 @@ import {
 } from '../libs/nofbiz/nofbiz.base.js';
 
 import { TEAM_OPTIONS } from './roles.js';
+import { INITIATIVE_TAGS } from './constants.js';
 import { create, update } from './iniciativas-api.js';
 import { STATUS } from './status-helpers.js';
 import { getAssignedMentor } from './routing-rules.js';
@@ -63,6 +64,9 @@ function buildInitiativeModal(initiative, onSuccess) {
     },
   });
 
+  const existingTags = initiative?.Tags ? fromFieldValue(initiative.Tags) : [];
+  const tagsField = new FormField({ value: existingTags });
+
   const problemField = new FormField({ value: initiative?.Problem || '' });
   const objectiveField = new FormField({ value: initiative?.Objective || '' });
   const confidentialField = new FormField({ value: initiative?.IsConfidential === true || initiative?.IsConfidential === 'true' });
@@ -70,7 +74,7 @@ function buildInitiativeModal(initiative, onSuccess) {
   const schema = new FormSchema({ title: titleField, team: teamField });
 
   // -- Step 3 form fields --
-  const TIME_PERIOD_OPTIONS = ['Mensal', 'Trimestral', 'Semestral', 'Anual'];
+  const TIME_PERIOD_OPTIONS = ['Diario', 'Mensal', 'Trimestral', 'Semestral', 'Anual'];
   const timePeriodField = new FormField({ value: initiative?.ImpactTimePeriod || '' });
 
   const existingAntes = initiative?.ImpactDataAntes ? fromFieldValue(initiative.ImpactDataAntes) : null;
@@ -89,10 +93,15 @@ function buildInitiativeModal(initiative, onSuccess) {
     const teamVal = teamField.value;
     const impactedTeamOUID = teamVal && typeof teamVal === 'object' ? teamVal.value : (teamVal || '');
     const mentor = getAssignedMentor(impactedTeamOUID);
+    const tagVal = tagsField.value;
+    const tags = Array.isArray(tagVal)
+      ? tagVal.map(t => typeof t === 'object' ? t.label : t)
+      : [];
     return {
       Title: titleField.value,
       Description: descriptionField.value,
       ImpactedTeamOUID: impactedTeamOUID,
+      Tags: tags,
       SavingType: 'Sem saving',
       SavingsValue: '',
       Problem: problemField.value,
@@ -187,6 +196,10 @@ function buildInitiativeModal(initiative, onSuccess) {
   const titleInput = new FieldLabel('Titulo *', new TextInput(titleField, { placeholder: 'Ex: Reducao do tempo de...' }));
   const descInput = new FieldLabel('Descricao', new TextArea(descriptionField, { placeholder: 'Descreva a oportunidade...', rows: 3 }));
   const teamCombo = new FieldLabel('Equipa *', new ComboBox(teamField, TEAM_OPTIONS, { placeholder: 'Seleccionar...' }));
+  const tagsCombo = new FieldLabel('Tags', new ComboBox(tagsField, INITIATIVE_TAGS, {
+    allowMultiple: true,
+    placeholder: 'Seleccionar tags...',
+  }));
   const problemInput = new FieldLabel('Problema / Oportunidade', new TextArea(problemField, { placeholder: 'Descreva o problema ou oportunidade...', rows: 3 }));
   const objectiveInput = new FieldLabel('Objectivo', new TextArea(objectiveField, { placeholder: 'Qual o objectivo esperado?', rows: 3 }));
   const confidentialCheck = new Container([
@@ -222,6 +235,7 @@ function buildInitiativeModal(initiative, onSuccess) {
       titleInput,
       descInput,
       teamCombo,
+      tagsCombo,
       problemInput,
       objectiveInput,
       confidentialCheck,
@@ -245,9 +259,15 @@ function buildInitiativeModal(initiative, onSuccess) {
     }),
   });
 
+  const step2BackBtn = new Button('Voltar', {
+    variant: 'secondary',
+    isOutlined: true,
+    onClickHandler: () => wizard.setView('step1'),
+  });
+
   const naoSection = new View([
     new Text('Sem problema -- o seu mentor ira ajuda-lo a quantificar a iniciativa apos submissao.', { type: 'p', class: 'pace-wizard-hint' }),
-    new Container([step2NaoDraftBtn, step2NaoSubmitBtn], { class: 'pace-modal-footer' }),
+    new Container([step2BackBtn, step2NaoDraftBtn, step2NaoSubmitBtn], { class: 'pace-modal-footer' }),
   ], { showOnRender: initiative?.RequiresMentorForSubmission === 'true' });
 
   const step2SimBtn = new Button('Sim', {
@@ -260,12 +280,6 @@ function buildInitiativeModal(initiative, onSuccess) {
     onClickHandler: () => naoSection.show(150),
   });
 
-  const step2BackBtn = new Button('Voltar', {
-    variant: 'secondary',
-    isOutlined: true,
-    onClickHandler: () => wizard.setView('step1'),
-  });
-
   const step2View = new View([
     new Container([
       new Text('Consegue quantificar/tipificar a iniciativa?', { type: 'h3' }),
@@ -273,21 +287,9 @@ function buildInitiativeModal(initiative, onSuccess) {
       new Container([step2SimBtn, step2NaoBtn], { class: 'pace-wizard-choice' }),
       naoSection,
     ], { class: 'pace-wizard-question' }),
-    new Container([step2BackBtn], { class: 'pace-modal-footer' }),
   ]);
 
   // ===== STEP 3 -- Impact Metrics (ANTES) =====
-
-  const initialPF = (volumePropostasField.value || 0) * (montanteMedioField.value || 0) * ((taxaTransformacaoField.value || 0) / 100);
-  const pfDisplay = new Text(initialPF.toFixed(2), { type: 'span' });
-
-  const updatePF = () => {
-    const pf = (volumePropostasField.value || 0) * (montanteMedioField.value || 0) * ((taxaTransformacaoField.value || 0) / 100);
-    pfDisplay.text = pf.toFixed(2);
-  };
-  volumePropostasField.subscribe(updatePF);
-  montanteMedioField.subscribe(updatePF);
-  taxaTransformacaoField.subscribe(updatePF);
 
   const step3BackBtn = new Button('Voltar', {
     variant: 'secondary',
@@ -317,18 +319,14 @@ function buildInitiativeModal(initiative, onSuccess) {
       new Text('Estes sao valores esperados/estimados.', { type: 'p' }),
       new FieldLabel('Periodo de tempo medido', new ComboBox(timePeriodField, TIME_PERIOD_OPTIONS, { placeholder: 'Seleccionar...' })),
       new Container([
-        new FieldLabel('V (AS IS): Volume propostas enviados [unid./mes]', new NumberInput(volumePropostasField, { min: 0, step: 1 })),
-        new FieldLabel('Mu (AS IS): Montante medio, cada proposta [EUR]', new NumberInput(montanteMedioField, { min: 0, step: 1 })),
-        new FieldLabel('TT (AS IS): Taxa de Transformacao [%]', new NumberInput(taxaTransformacaoField, { min: 0, max: 100, step: 0.1 })),
-        new FieldLabel('V (AS IS): Volume [unid]', new NumberInput(volumeField, { min: 0, step: 1 })),
-        new FieldLabel('C (AS IS): Custo unitario [EUR/mes]', new NumberInput(custoUnitarioField, { min: 0, step: 0.01 })),
-        new FieldLabel('V (AS IS): Volumes processados, mensal [unid.]', new NumberInput(volumesProcessadosField, { min: 0, step: 1 })),
-        new FieldLabel('Tu (AS IS): Tempo de tratamento unitario [min]', new NumberInput(tempoTratamentoField, { min: 0, step: 0.1 })),
+        new FieldLabel('Volume propostas enviados [unid./mes]', new NumberInput(volumePropostasField, { min: 0, step: 1 })),
+        new FieldLabel('Montante medio, cada proposta [EUR]', new NumberInput(montanteMedioField, { min: 0, step: 1 })),
+        new FieldLabel('Taxa de Transformacao [%]', new NumberInput(taxaTransformacaoField, { min: 0, max: 100, step: 0.1 })),
+        new FieldLabel('Volume [unid]', new NumberInput(volumeField, { min: 0, step: 1 })),
+        new FieldLabel('Custo unitario [EUR/mes]', new NumberInput(custoUnitarioField, { min: 0, step: 0.01 })),
+        new FieldLabel('Volumes processados, mensal [unid.]', new NumberInput(volumesProcessadosField, { min: 0, step: 1 })),
+        new FieldLabel('Tempo de tratamento unitario [min]', new NumberInput(tempoTratamentoField, { min: 0, step: 0.1 })),
       ], { class: 'pace-impact-metrics' }),
-      new Container([
-        new Text('PF (AS IS) = V x Mu x TT [EUR/mes]', { type: 'span' }),
-        pfDisplay,
-      ], { class: 'pace-impact-row--computed' }),
     ], { class: 'pace-initiative-form' }),
     new Container([step3BackBtn, step3DraftBtn, step3SubmitBtn], { class: 'pace-modal-footer' }),
   ]);
@@ -362,6 +360,7 @@ function buildInitiativeModal(initiative, onSuccess) {
       titleField.dispose();
       descriptionField.dispose();
       teamField.dispose();
+      tagsField.dispose();
       problemField.dispose();
       objectiveField.dispose();
       confidentialField.dispose();

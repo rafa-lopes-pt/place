@@ -103,6 +103,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -130,6 +131,7 @@ var _spMockData = {
           RequiresMentorForSubmission: 'false',
           ImpactDataAntes: '{"volumePropostas":150,"montanteMedio":2500,"taxaTransformacao":35,"volume":80,"custoUnitario":45,"volumesProcessados":200,"tempoTratamento":12,"producaoFinal":131250}',
           ImpactTimePeriod: 'Mensal',
+          Tags: '["Business Automation","Excel"]',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -155,6 +157,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '["Business Automation","Power BI","Data Management"]',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -180,6 +183,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: 'true', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -205,6 +209,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -230,6 +235,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -255,6 +261,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -280,6 +287,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -306,6 +314,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -331,6 +340,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: 'Validado pelo Gestor RD. Aguarda Mentor.', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -356,6 +366,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: 'Validado pelo Gestor RF. Valor confirmado.', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -381,6 +392,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -406,6 +418,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -431,6 +444,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -456,6 +470,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -481,6 +496,7 @@ var _spMockData = {
           RejectionReason: '', CancellationReason: 'Projecto descontinuado por mudanca de prioridades.',
           GestorValidationNote: '', MentorValidationNote: '',
           RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
+          Tags: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
       ],
@@ -519,6 +535,7 @@ var _spMockData = {
         { InternalName: 'RequiresMentorForSubmission', Title: 'RequiresMentorForSubmission', TypeAsString: 'Text' },
         { InternalName: 'ImpactDataAntes', Title: 'ImpactDataAntes', TypeAsString: 'Note' },
         { InternalName: 'ImpactTimePeriod', Title: 'ImpactTimePeriod', TypeAsString: 'Text' },
+        { InternalName: 'Tags', Title: 'Tags', TypeAsString: 'Note' },
       ],
       nextId: 17,
     },
