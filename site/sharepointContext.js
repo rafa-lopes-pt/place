@@ -102,6 +102,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -126,6 +127,9 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: 'false',
+          ImpactDataAntes: '{"volumePropostas":150,"montanteMedio":2500,"taxaTransformacao":35,"volume":80,"custoUnitario":45,"volumesProcessados":200,"tempoTratamento":12,"producaoFinal":131250}',
+          ImpactTimePeriod: 'Mensal',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -150,6 +154,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -174,6 +179,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: 'true', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -198,6 +204,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -222,6 +229,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -246,6 +254,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -270,6 +279,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -295,6 +305,7 @@ var _spMockData = {
           ReviewRequestedBy: '{"email":"diogo.legatheaux@cetelem.pt","displayName":"Diogo Legatheaux"}',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -319,6 +330,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: 'Validado pelo Gestor RD. Aguarda Mentor.', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -343,6 +355,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: 'Validado pelo Gestor RF. Valor confirmado.', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -367,6 +380,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -391,6 +405,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -415,6 +430,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -439,6 +455,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: '',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
         {
@@ -463,6 +480,7 @@ var _spMockData = {
           ReviewReason: '', ReviewRequestedBy: '',
           RejectionReason: '', CancellationReason: 'Projecto descontinuado por mudanca de prioridades.',
           GestorValidationNote: '', MentorValidationNote: '',
+          RequiresMentorForSubmission: '', ImpactDataAntes: '', ImpactTimePeriod: '',
           AuthorId: 1, __metadata: { etag: '"1"' },
         },
       ],
@@ -498,6 +516,9 @@ var _spMockData = {
         { InternalName: 'CancellationReason', Title: 'CancellationReason', TypeAsString: 'Note' },
         { InternalName: 'GestorValidationNote', Title: 'GestorValidationNote', TypeAsString: 'Note' },
         { InternalName: 'MentorValidationNote', Title: 'MentorValidationNote', TypeAsString: 'Note' },
+        { InternalName: 'RequiresMentorForSubmission', Title: 'RequiresMentorForSubmission', TypeAsString: 'Text' },
+        { InternalName: 'ImpactDataAntes', Title: 'ImpactDataAntes', TypeAsString: 'Note' },
+        { InternalName: 'ImpactTimePeriod', Title: 'ImpactTimePeriod', TypeAsString: 'Text' },
       ],
       nextId: 17,
     },
